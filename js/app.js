@@ -131,13 +131,17 @@ const App = {
                 </button>
             </div>
         `).join('');
+        
+        // Активация иконок после рендера
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
     },
     
     buyItem(category, itemId) {
         const item = this.shopItems[category]?.find(i => i.id === itemId);
         if (!item) return;
         
-        // Проверяем, есть ли Telegram WebApp
         if (window.Telegram && window.Telegram.WebApp) {
             try {
                 const tg = window.Telegram.WebApp;
@@ -158,14 +162,12 @@ const App = {
             } catch (e) {}
         }
         
-        // Демо-режим
         if (confirm(`Купить "${item.title}" за ${item.price}⭐? (ДЕМО)`)) {
             this.processPurchase(category, itemId, item);
         }
     },
     
     processPurchase(category, itemId, item) {
-        // Проверяем баланс
         if (this.balance < item.price) {
             this.showNotification('❌', 'Недостаточно звёзд', 'Пополните баланс в магазине');
             return;
@@ -219,9 +221,13 @@ const App = {
             if (items[map[page]]) items[map[page]].classList.add('active');
         }
         
-        // Обновляем магазин при открытии
         if (page === 'shop') {
             this.renderShopItems(this.currentShopTab);
+        }
+        
+        // Активация иконок при смене страницы
+        if (typeof lucide !== 'undefined') {
+            setTimeout(() => lucide.createIcons(), 50);
         }
     },
     
@@ -245,12 +251,21 @@ const App = {
         if (!list) return;
         list.innerHTML = this.games.map(g => `
             <div class="settings-item" onclick="App.openGame('${g.id}')" style="cursor:pointer;">
-                <div class="left"><span class="icon">${g.icon}</span>
-                    <div class="info"><div class="title">${g.title}</div><div class="desc">${g.desc}</div></div>
+                <div class="left">
+                    <span class="icon">${g.icon}</span>
+                    <div class="info">
+                        <div class="title">${g.title}</div>
+                        <div class="desc">${g.desc}</div>
+                    </div>
                 </div>
                 <div class="right">${g.status} →</div>
             </div>
         `).join('');
+        
+        // Активация иконок после рендера
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
     },
     
     openGame(gameId) {
@@ -264,6 +279,11 @@ const App = {
             case 'crash': content.innerHTML = renderCrash(); break;
         }
         this.showPage('game');
+        
+        // Активация иконок после открытия игры
+        if (typeof lucide !== 'undefined') {
+            setTimeout(() => lucide.createIcons(), 100);
+        }
     },
     
     playPlinko() { playPlinko(this); },
@@ -286,6 +306,11 @@ const App = {
             setTimeout(() => this.authViaTelegram(), 500);
         } else {
             document.getElementById('authOverlay').classList.add('show');
+        }
+        
+        // Активация иконок Lucide
+        if (typeof lucide !== 'undefined') {
+            setTimeout(() => lucide.createIcons(), 200);
         }
         
         // Эмуляция игры
@@ -334,8 +359,9 @@ const App = {
             });
         });
         
-        console.log('🎮 GiftArcade v2.4 — С магазином!');
+        console.log('🎮 GiftArcade v2.5 — С иконками!');
         console.log('🛒 Категории: Звёзды, Бонусы, Бейджи, Премиум');
+        console.log('🎨 Иконки: Lucide SVG');
     }
 };
 
