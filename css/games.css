@@ -1,0 +1,160 @@
+.games-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.games-list .settings-item {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.games-list .settings-item:active { transform: scale(0.98); }
+.games-list .settings-item .left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.games-list .settings-item .left .icon { font-size: 24px; }
+.games-list .settings-item .left .info .title { font-size: 14px; font-weight: 500; }
+.games-list .settings-item .left .info .desc { font-size: 11px; color: var(--text-secondary); }
+.games-list .settings-item .right { color: var(--text-secondary); font-size: 13px; }
+
+/* ---------- ИГРОВАЯ СТРАНИЦА ---------- */
+.game-page-container { padding: 4px 0 16px 0; }
+.game-title {
+    font-size: 20px;
+    font-weight: 700;
+    text-align: center;
+}
+.game-subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: 16px;
+}
+.game-area {
+    background: rgba(0,0,0,0.3);
+    border-radius: var(--radius);
+    padding: 20px 16px;
+    min-height: 180px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+.game-area .result-display {
+    font-size: 40px;
+    font-weight: 700;
+    margin: 8px 0;
+}
+.game-area .result-display.win { color: #4ecdc4; }
+.game-area .result-display.lose { color: #ff6b6b; }
+.game-area .game-emoji { font-size: 56px; display: block; margin: 4px 0; }
+
+.bet-controls {
+    display: flex;
+    gap: 8px;
+    margin: 12px 0;
+}
+.bet-controls input {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 15px;
+    font-weight: 600;
+    outline: none;
+    min-width: 0;
+}
+.bet-controls input:focus {
+    border-color: rgba(255,107,107,0.3);
+}
+.bet-controls button {
+    padding: 10px 20px;
+    border-radius: 12px;
+    border: none;
+    background: var(--gradient);
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+.bet-controls button:active { transform: scale(0.95); }
+.bet-controls button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.quick-bets {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+.quick-bets button {
+    padding: 5px 12px;
+    border-radius: 100px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: 11px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.quick-bets button:active { transform: scale(0.95); }
+.quick-bets button:hover { background: var(--bg-card-hover); }
+
+.game-history {
+    font-size: 11px;
+    color: var(--text-secondary);
+    max-height: 40px;
+    overflow-y: auto;
+    margin-top: 8px;
+}
+.game-history span {
+    display: inline-block;
+    margin: 0 3px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: var(--bg-card);
+}
+.game-history span.win { color: #4ecdc4; background: rgba(78,205,196,0.1); }
+.game-history span.lose { color: #ff6b6b; background: rgba(255,107,107,0.1); }
+
+.game-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+.game-actions button {
+    padding: 8px 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.game-actions button:active { transform: scale(0.95); }
+.game-actions button.primary {
+    background: var(--gradient);
+    color: #fff;
+    border: none;
+}
+.game-actions button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
