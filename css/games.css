@@ -829,3 +829,75 @@
 .random-btn:active {
     transform: scale(0.95);
 }
+/* ============================================================
+   CRASH СТИЛИ
+   ============================================================ */
+
+/* ---------- ГРАФИК ---------- */
+.crash-chart {
+    background: rgba(0,0,0,0.3);
+    border-radius: var(--radius);
+    padding: 8px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border-color);
+}
+
+#crashCanvas {
+    width: 100%;
+    height: auto;
+    max-height: 140px;
+    display: block;
+    border-radius: 8px;
+}
+
+/* ---------- АНИМАЦИЯ ДЛЯ CRASH ---------- */
+#crashMultiplier {
+    transition: color 0.3s ease;
+    font-family: 'Inter', monospace;
+}
+
+#crashProgress {
+    background: var(--gradient);
+    box-shadow: 0 0 20px rgba(255,107,107,0.2);
+    transition: width 0.2s ease;
+}
+
+/* ---------- КНОПКИ ---------- */
+#crashBtn {
+    transition: all 0.3s ease;
+}
+
+#crashBtn:not(:disabled):hover {
+    transform: scale(1.05);
+}
+
+#crashBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+#crashStartBtn {
+    transition: all 0.3s ease;
+}
+
+#crashStartBtn:not(:disabled):hover {
+    background: var(--bg-card-hover);
+    transform: translateY(-2px);
+}
+
+#crashStartBtn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* ---------- АДАПТИВ ---------- */
+@media (max-width: 380px) {
+    .crash-chart {
+        padding: 4px;
+    }
+    #crashCanvas {
+        max-height: 100px;
+    }
+}
