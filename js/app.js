@@ -4,6 +4,7 @@
 const App = {
     // СОСТОЯНИЕ
     user: { name: 'Игрок', status: '🟢 В сети', badge: '🏅' },
+    telegramUser: null,
     balance: 1000,
     totalGames: 0,
     wins: 0,
@@ -19,6 +20,49 @@ const App = {
         { id: 'coinflip', title: 'Coin Flip', desc: 'Орёл или решка — удвой ставку', icon: '🪙', status: '' },
         { id: 'crash', title: 'Crash', desc: 'Забери выигрыш до падения', icon: '📈', status: '🔥' }
     ],
+    
+    // ============================================================
+    //  АВТОРИЗАЦИЯ
+    // ============================================================
+    authViaTelegram() {
+        try {
+            const tg = window.Telegram.WebApp;
+            tg.expand();
+            const user = tg.initDataUnsafe?.user || {
+                id: 123456,
+                first_name: 'Игрок',
+                last_name: '',
+                username: 'player',
+                photo_url: null
+            };
+            
+            this.telegramUser = user;
+            this.user.name = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+            
+            if (user.photo_url) {
+                document.getElementById('userAvatar').innerHTML = 
+                    `<img src="${user.photo_url}" alt="avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+            }
+            
+            document.getElementById('authOverlay').classList.remove('show');
+            this.showNotification('✅', 'Добро пожаловать!', 'Вы вошли через Telegram');
+            this.updateUI();
+            
+        } catch (e) {
+            // Демо-режим если Telegram API недоступен
+            this.telegramUser = {
+                id: 123456,
+                first_name: 'Демо',
+                last_name: 'Игрок',
+                username: 'demo_player',
+                photo_url: null
+            };
+            this.user.name = 'Демо Игрок';
+            document.getElementById('authOverlay').classList.remove('show');
+            this.showNotification('ℹ️', 'Демо-режим', 'Telegram WebApp не обнаружен');
+            this.updateUI();
+        }
+    },
     
     // ============================================================
     //  МЕТОДЫ
@@ -160,6 +204,15 @@ const App = {
         renderAchievements(this);
         updateUI(this);
         
+        // Показываем экран авторизации
+        if (window.Telegram && window.Telegram.WebApp) {
+            setTimeout(() => {
+                this.authViaTelegram();
+            }, 500);
+        } else {
+            document.getElementById('authOverlay').classList.add('show');
+        }
+        
         // Эмуляция игры для демонстрации достижений
         let emuCount = 0;
         const emuInterval = setInterval(() => {
@@ -206,11 +259,12 @@ const App = {
             });
         });
         
-        console.log('🎮 GiftArcade v2.2 — Полноценное приложение!');
+        console.log('🎮 GiftArcade v2.3 — С Telegram авторизацией!');
         console.log('📂 Структура: css/, js/, images/');
         console.log('🎮 Игры: Plinko, Coin Flip, Crash');
         console.log('🏆 Достижения: 6 штук');
         console.log('🎨 Фоны: 3 варианта');
+        console.log('🔐 Авторизация: Telegram WebApp');
     }
 };
 
