@@ -1,0 +1,140 @@
+/* ---------- МОДАЛКИ ---------- */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+    animation: fadeIn 0.3s ease;
+}
+.modal-overlay.show { display: flex; }
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.modal-content {
+    background: var(--bg-secondary);
+    backdrop-filter: blur(40px);
+    border-radius: 24px;
+    padding: 24px 20px;
+    max-width: 360px;
+    width: 100%;
+    border: 1px solid var(--border-color);
+    animation: bounceIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: 80vh;
+    overflow-y: auto;
+}
+.modal-content h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
+.modal-content .input-group { margin-bottom: 12px; }
+.modal-content .input-group label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+.modal-content .input-group input,
+.modal-content .input-group select {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    transition: var(--transition);
+    -webkit-appearance: none;
+}
+.modal-content .input-group input:focus,
+.modal-content .input-group select:focus {
+    border-color: rgba(255,107,107,0.3);
+}
+.modal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+}
+.modal-actions button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.modal-actions button:active { transform: scale(0.95); }
+.modal-actions .save-btn {
+    background: var(--gradient);
+    color: #fff;
+    box-shadow: var(--glow);
+}
+.modal-actions .cancel-btn {
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+/* ---------- УВЕДОМЛЕНИЯ ---------- */
+.notification-container {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    width: 90%;
+    max-width: 380px;
+    pointer-events: none;
+}
+.notification {
+    background: var(--bg-secondary);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    animation: notifIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: auto;
+    transition: all 0.3s;
+}
+.notification.out {
+    animation: notifOut 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes notifIn {
+    from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes notifOut {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to { opacity: 0; transform: translateY(-20px) scale(0.95); }
+}
+.notification .icon { font-size: 24px; flex-shrink: 0; }
+.notification .content { flex: 1; min-width: 0; }
+.notification .content .title { font-weight: 600; font-size: 14px; }
+.notification .content .desc { font-size: 12px; color: var(--text-secondary); }
+.notification .close-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px;
+}
