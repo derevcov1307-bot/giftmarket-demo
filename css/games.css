@@ -1041,3 +1041,44 @@
 .random-btn:active {
     transform: scale(0.95);
 }
+/* ============================================================
+   АНИМАЦИЯ ШАРИКА ДЛЯ PLINKO
+   ============================================================ */
+
+.plinko-grid {
+    position: relative;
+    min-height: 180px;
+}
+
+.plinko-ball {
+    position: absolute;
+    font-size: 28px;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    transition: none;
+    z-index: 10;
+    filter: drop-shadow(0 0 10px rgba(255,107,107,0.5));
+    pointer-events: none;
+}
+
+.plinko-ball.show {
+    display: block !important;
+}
+
+/* ---------- АНИМАЦИЯ ПОПАДАНИЯ ---------- */
+@keyframes hitPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.5); box-shadow: 0 0 40px rgba(255,107,107,0.4); }
+    100% { transform: scale(1); }
+}
+
+.plinko-cell.hit {
+    animation: hitPulse 0.5s ease;
+}
+
+.plinko-cell.win-hit {
+    animation: hitPulse 0.5s ease;
+    background: rgba(78,205,196,0.3) !important;
+    border-color: #4ecdc4 !important;
+}
