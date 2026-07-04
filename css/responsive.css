@@ -1,0 +1,40 @@
+@media (max-width: 380px) {
+    .profile-info .stats { gap: 8px; }
+    .profile-info .stats-item { font-size: 10px; }
+    .logo-text { font-size: 16px; }
+    .balance { font-size: 12px; padding: 4px 10px; }
+    .stat-box .number { font-size: 16px; }
+    .stat-box .label { font-size: 8px; }
+    .achievement-item { flex: 0 0 64px; padding: 8px 6px; }
+    .achievement-item .icon { font-size: 20px; }
+    .game-area { padding: 16px 12px; min-height: 140px; }
+    .bet-controls input { font-size: 13px; padding: 8px 10px; }
+    .bet-controls button { font-size: 12px; padding: 8px 14px; }
+}
+
+@media (min-width: 441px) {
+    .app-container {
+        height: auto;
+        min-height: 80vh;
+        max-height: 90vh;
+    }
+    .page { padding: 0 20px 20px 20px; }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+    .profile-card { padding: 10px 14px; margin: 8px 0 12px 0; }
+    .profile-avatar { width: 36px; height: 36px; font-size: 18px; }
+    .profile-info .name { font-size: 13px; }
+    .stats-grid { margin-bottom: 10px; }
+    .stat-box { padding: 8px 6px; }
+    .stat-box .number { font-size: 15px; }
+    .action-buttons { margin-bottom: 10px; }
+    .action-btn { padding: 8px; font-size: 12px; }
+    .achievements-scroll { padding-bottom: 6px; }
+    .bottom-nav { padding: 4px 8px 8px 8px; }
+    .nav-item .nav-icon { font-size: 16px; }
+    .top-bar { padding: 10px 12px 8px 12px; }
+    .game-area { min-height: 120px; padding: 12px 10px; }
+    .game-area .result-display { font-size: 28px; }
+    .game-area .game-emoji { font-size: 36px; }
+}
