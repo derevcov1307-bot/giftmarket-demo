@@ -1,5 +1,5 @@
 // ============================================================
-//  ГЛАВНОЕ ПРИЛОЖЕНИЕ (App)
+//  ГЛАВНОЕ ПРИЛОЖЕНИЕ (App) — БЕЗ ДЕМО-РЕЖИМА
 // ============================================================
 const App = {
     // СОСТОЯНИЕ
@@ -17,7 +17,7 @@ const App = {
     isPremium: false,
     boosters: { x2: 0, x3: 0 },
     
-    // ИГРЫ С КАРТИНКАМИ
+    // ИГРЫ
     games: [
         { 
             id: 'plinko', 
@@ -150,7 +150,6 @@ const App = {
             </div>
         `).join('');
         
-        // Активация иконок после рендера
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
@@ -243,7 +242,6 @@ const App = {
             this.renderShopItems(this.currentShopTab);
         }
         
-        // Активация иконок при смене страницы
         if (typeof lucide !== 'undefined') {
             setTimeout(() => lucide.createIcons(), 50);
         }
@@ -262,7 +260,7 @@ const App = {
     openBgModal() { openBgModal(); },
     
     // ============================================================
-    //  ИГРЫ (с картинками)
+    //  ИГРЫ
     // ============================================================
     renderGames() {
         const list = document.getElementById('gamesList');
@@ -296,7 +294,6 @@ const App = {
         }
         this.showPage('game');
         
-        // Активация иконок после открытия игры
         if (typeof lucide !== 'undefined') {
             setTimeout(() => lucide.createIcons(), 100);
         }
@@ -308,7 +305,7 @@ const App = {
     crashAction() { crashAction(this); },
     
     // ============================================================
-    //  ИНИЦИАЛИЗАЦИЯ
+    //  ИНИЦИАЛИЗАЦИЯ (БЕЗ ДЕМО-РЕЖИМА)
     // ============================================================
     init() {
         loadTheme(this);
@@ -324,28 +321,11 @@ const App = {
             document.getElementById('authOverlay').classList.add('show');
         }
         
-        // Активация иконок Lucide
         if (typeof lucide !== 'undefined') {
             setTimeout(() => lucide.createIcons(), 200);
         }
         
-        // Эмуляция игры
-        let emuCount = 0;
-        const emuInterval = setInterval(() => {
-            if (emuCount < 30) {
-                this.totalGames++;
-                if (Math.random() > 0.5) this.wins++;
-                this.playedGames.add(['plinko','coinflip','crash'][Math.floor(Math.random() * 3)]);
-                if (emuCount % 5 === 0) this.gifts++;
-                updateUI(this);
-                checkAchievements(this);
-                emuCount++;
-            } else {
-                clearInterval(emuInterval);
-            }
-        }, 700);
-        
-        // Онлайн
+        // Онлайн (оставляем)
         setInterval(() => {
             const el = document.getElementById('onlinePlayers');
             const current = parseInt(el.textContent.replace(/,/g, ''));
@@ -375,7 +355,7 @@ const App = {
             });
         });
         
-        console.log('🎮 GiftArcade v2.5 — С картинками игр!');
+        console.log('🎮 GiftArcade v2.5 — Демо-режим отключён!');
         console.log('🛒 Категории: Звёзды, Бонусы, Бейджи, Премиум');
         console.log('🎨 Иконки: Lucide SVG + картинки для игр');
     }
