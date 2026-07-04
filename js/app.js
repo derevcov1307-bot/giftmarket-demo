@@ -17,11 +17,29 @@ const App = {
     isPremium: false,
     boosters: { x2: 0, x3: 0 },
     
-    // ИГРЫ
+    // ИГРЫ С КАРТИНКАМИ
     games: [
-        { id: 'plinko', title: 'Plinko', desc: 'Шарик в ячейки с множителями', icon: '🎲', status: '🔥' },
-        { id: 'coinflip', title: 'Coin Flip', desc: 'Орёл или решка — удвой ставку', icon: '🪙', status: '' },
-        { id: 'crash', title: 'Crash', desc: 'Забери выигрыш до падения', icon: '📈', status: '🔥' }
+        { 
+            id: 'plinko', 
+            title: 'Plinko', 
+            desc: 'Шарик в ячейки с множителями', 
+            icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417118.png',
+            status: '🔥' 
+        },
+        { 
+            id: 'coinflip', 
+            title: 'Coin Flip', 
+            desc: 'Орёл или решка — удвой ставку', 
+            icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417085.png',
+            status: '' 
+        },
+        { 
+            id: 'crash', 
+            title: 'Crash', 
+            desc: 'Забери выигрыш до падения', 
+            icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417074.png',
+            status: '🔥' 
+        }
     ],
     
     // ТОВАРЫ МАГАЗИНА
@@ -244,15 +262,18 @@ const App = {
     openBgModal() { openBgModal(); },
     
     // ============================================================
-    //  ИГРЫ
+    //  ИГРЫ (с картинками)
     // ============================================================
     renderGames() {
         const list = document.getElementById('gamesList');
         if (!list) return;
+        
         list.innerHTML = this.games.map(g => `
             <div class="settings-item" onclick="App.openGame('${g.id}')" style="cursor:pointer;">
                 <div class="left">
-                    <span class="icon">${g.icon}</span>
+                    <div class="game-icon-wrapper">
+                        <img src="${g.icon}" alt="${g.title}" loading="lazy">
+                    </div>
                     <div class="info">
                         <div class="title">${g.title}</div>
                         <div class="desc">${g.desc}</div>
@@ -261,11 +282,6 @@ const App = {
                 <div class="right">${g.status} →</div>
             </div>
         `).join('');
-        
-        // Активация иконок после рендера
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
     },
     
     openGame(gameId) {
@@ -359,9 +375,9 @@ const App = {
             });
         });
         
-        console.log('🎮 GiftArcade v2.5 — С иконками!');
+        console.log('🎮 GiftArcade v2.5 — С картинками игр!');
         console.log('🛒 Категории: Звёзды, Бонусы, Бейджи, Премиум');
-        console.log('🎨 Иконки: Lucide SVG');
+        console.log('🎨 Иконки: Lucide SVG + картинки для игр');
     }
 };
 
