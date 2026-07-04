@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GiftArcade — игры с выводом</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/profile.css">
@@ -45,12 +46,19 @@
         <!-- TOP BAR -->
         <div class="top-bar">
             <div class="logo" onclick="App.showPage('home')">
-                <div class="logo-icon">🎮</div>
+                <div class="logo-icon">
+                    <i data-lucide="gamepad-2" style="color:#fff;width:24px;height:24px;"></i>
+                </div>
                 <span class="logo-text">GiftArcade</span>
             </div>
             <div class="top-actions">
-                <button class="theme-toggle" onclick="App.toggleTheme()" id="themeBtn">🌙</button>
-                <div class="balance" onclick="App.showBalance()">⭐ <span id="userBalance">1 000</span></div>
+                <button class="theme-toggle" onclick="App.toggleTheme()" id="themeBtn">
+                    <i data-lucide="moon" style="width:18px;height:18px;"></i>
+                </button>
+                <div class="balance" onclick="App.showBalance()">
+                    <i data-lucide="star" style="width:16px;height:16px;fill:#ffd93d;color:#ffd93d;"></i>
+                    <span id="userBalance">1 000</span>
+                </div>
             </div>
         </div>
 
@@ -62,32 +70,58 @@
             </div>
 
             <div class="profile-card" onclick="App.showPage('profile')">
-                <div class="profile-avatar" id="userAvatar">👤</div>
+                <div class="profile-avatar" id="userAvatar">
+                    <i data-lucide="user" style="width:28px;height:28px;color:#fff;"></i>
+                </div>
                 <div class="profile-info">
                     <div class="name"><span id="userName">Игрок</span></div>
                     <div class="sub" id="userSub">🟢 В сети</div>
                     <div class="stats">
-                        <span class="stats-item">🏆 <strong id="winsCount">0</strong></span>
-                        <span class="stats-item">🎁 <strong id="giftsCount">0</strong></span>
+                        <span class="stats-item">
+                            <i data-lucide="trophy" style="width:14px;height:14px;display:inline-block;vertical-align:middle;"></i>
+                            <strong id="winsCount">0</strong>
+                        </span>
+                        <span class="stats-item">
+                            <i data-lucide="gift" style="width:14px;height:14px;display:inline-block;vertical-align:middle;"></i>
+                            <strong id="giftsCount">0</strong>
+                        </span>
                     </div>
                 </div>
                 <div class="profile-badge" id="profileBadge">🏅</div>
             </div>
 
             <div class="stats-grid">
-                <div class="stat-box"><div class="number" id="totalGames">0</div><div class="label">Игр</div></div>
-                <div class="stat-box"><div class="number" id="onlinePlayers">342</div><div class="label">Онлайн</div></div>
-                <div class="stat-box"><div class="number" id="totalPrizes">5 231</div><div class="label">Призов</div></div>
+                <div class="stat-box">
+                    <div class="number" id="totalGames">0</div>
+                    <div class="label">Игр</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="onlinePlayers">342</div>
+                    <div class="label">Онлайн</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="totalPrizes">5 231</div>
+                    <div class="label">Призов</div>
+                </div>
             </div>
 
             <div class="action-buttons">
-                <button class="action-btn primary" onclick="App.addBalance(100)">💰 +100⭐</button>
-                <button class="action-btn secondary" onclick="App.addBalance(500)">💎 +500⭐</button>
-                <button class="action-btn secondary full" onclick="App.resetBalance()">🔄 Сброс</button>
+                <button class="action-btn primary" onclick="App.addBalance(100)">
+                    <i data-lucide="plus" style="width:18px;height:18px;"></i> 100⭐
+                </button>
+                <button class="action-btn secondary" onclick="App.addBalance(500)">
+                    <i data-lucide="gem" style="width:18px;height:18px;"></i> 500⭐
+                </button>
+                <button class="action-btn secondary full" onclick="App.resetBalance()">
+                    <i data-lucide="refresh-cw" style="width:18px;height:18px;"></i> Сброс
+                </button>
             </div>
 
             <div class="achievements-section">
-                <div class="section-title"><span>🏆 Достижения</span><span class="see-all" id="achieveCount">0/6</span></div>
+                <div class="section-title">
+                    <span><i data-lucide="trophy" style="width:18px;height:18px;display:inline-block;vertical-align:middle;"></i> Достижения</span>
+                    <span class="see-all" id="achieveCount">0/6</span>
+                </div>
                 <div class="achievements-scroll" id="achievementsList"></div>
             </div>
         </div>
@@ -95,28 +129,36 @@
         <!-- ===== СТРАНИЦА: МАГАЗИН ===== -->
         <div class="page" id="page-shop">
             <div style="padding:8px 0 12px 0;">
-                <div style="font-size:22px;font-weight:700;">🛒 Магазин</div>
+                <div style="font-size:22px;font-weight:700;">
+                    <i data-lucide="shopping-bag" style="width:24px;height:24px;display:inline-block;vertical-align:middle;"></i> Магазин
+                </div>
                 <div style="font-size:13px;color:var(--text-secondary);">Пополни баланс и купи бонусы</div>
             </div>
 
-            <!-- Вкладки магазина -->
             <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px;">
-                <button class="shop-tab active" data-tab="stars" onclick="App.switchShopTab('stars')">⭐ Звёзды</button>
-                <button class="shop-tab" data-tab="bonus" onclick="App.switchShopTab('bonus')">🎁 Бонусы</button>
-                <button class="shop-tab" data-tab="badges" onclick="App.switchShopTab('badges')">🏅 Бейджи</button>
-                <button class="shop-tab" data-tab="premium" onclick="App.switchShopTab('premium')">👑 Премиум</button>
+                <button class="shop-tab active" data-tab="stars" onclick="App.switchShopTab('stars')">
+                    <i data-lucide="star" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i> Звёзды
+                </button>
+                <button class="shop-tab" data-tab="bonus" onclick="App.switchShopTab('bonus')">
+                    <i data-lucide="zap" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i> Бонусы
+                </button>
+                <button class="shop-tab" data-tab="badges" onclick="App.switchShopTab('badges')">
+                    <i data-lucide="award" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i> Бейджи
+                </button>
+                <button class="shop-tab" data-tab="premium" onclick="App.switchShopTab('premium')">
+                    <i data-lucide="crown" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i> Премиум
+                </button>
             </div>
 
-            <!-- Товары -->
-            <div class="shop-grid" id="shopGrid">
-                <!-- Генерируется JS -->
-            </div>
+            <div class="shop-grid" id="shopGrid"></div>
         </div>
 
         <!-- ===== СТРАНИЦА: ИГРЫ ===== -->
         <div class="page" id="page-games">
             <div style="padding:8px 0 12px 0;">
-                <div style="font-size:22px;font-weight:700;">🎮 Игры</div>
+                <div style="font-size:22px;font-weight:700;">
+                    <i data-lucide="gamepad-2" style="width:24px;height:24px;display:inline-block;vertical-align:middle;"></i> Игры
+                </div>
                 <div style="font-size:13px;color:var(--text-secondary);">Выбери игру и начни выигрывать!</div>
             </div>
             <div class="games-list" id="gamesList"></div>
@@ -125,17 +167,31 @@
         <!-- ===== СТРАНИЦА: ПРОФИЛЬ ===== -->
         <div class="page" id="page-profile">
             <div style="padding:8px 0 12px 0;">
-                <div style="font-size:22px;font-weight:700;">⚙️ Настройки</div>
+                <div style="font-size:22px;font-weight:700;">
+                    <i data-lucide="settings" style="width:24px;height:24px;display:inline-block;vertical-align:middle;"></i> Настройки
+                </div>
             </div>
 
             <div class="settings-group">
                 <div class="group-title">👤 Профиль</div>
                 <div class="settings-item" onclick="App.openProfileModal()">
-                    <div class="left"><span class="icon">✏️</span><div class="info"><div class="title">Изменить профиль</div><div class="desc">Имя, статус, бейдж</div></div></div>
+                    <div class="left">
+                        <span class="icon"><i data-lucide="edit" style="width:20px;height:20px;"></i></span>
+                        <div class="info">
+                            <div class="title">Изменить профиль</div>
+                            <div class="desc">Имя, статус, бейдж</div>
+                        </div>
+                    </div>
                     <div class="right">→</div>
                 </div>
                 <div class="settings-item" onclick="App.openStatusModal()">
-                    <div class="left"><span class="icon">🟢</span><div class="info"><div class="title">Статус</div><div class="desc" id="statusDisplay">В сети</div></div></div>
+                    <div class="left">
+                        <span class="icon"><i data-lucide="circle" style="width:20px;height:20px;color:#4ecdc4;"></i></span>
+                        <div class="info">
+                            <div class="title">Статус</div>
+                            <div class="desc" id="statusDisplay">В сети</div>
+                        </div>
+                    </div>
                     <div class="right">→</div>
                 </div>
             </div>
@@ -143,11 +199,17 @@
             <div class="settings-group">
                 <div class="group-title">🎨 Оформление</div>
                 <div class="settings-item" onclick="App.toggleTheme()">
-                    <div class="left"><span class="icon">🌓</span><div class="info"><div class="title">Тёмная тема</div></div></div>
+                    <div class="left">
+                        <span class="icon"><i data-lucide="sun-moon" style="width:20px;height:20px;"></i></span>
+                        <div class="info"><div class="title">Тёмная тема</div></div>
+                    </div>
                     <div class="right"><div class="toggle active" id="themeToggle"><div class="knob"></div></div></div>
                 </div>
                 <div class="settings-item" onclick="App.openBgModal()">
-                    <div class="left"><span class="icon">🖼️</span><div class="info"><div class="title">Фон</div><div class="desc" id="bgDisplay">Тёмный</div></div></div>
+                    <div class="left">
+                        <span class="icon"><i data-lucide="image" style="width:20px;height:20px;"></i></span>
+                        <div class="info"><div class="title">Фон</div><div class="desc" id="bgDisplay">Тёмный</div></div>
+                    </div>
                     <div class="right">→</div>
                 </div>
             </div>
@@ -155,11 +217,17 @@
             <div class="settings-group">
                 <div class="group-title">ℹ️ О приложении</div>
                 <div class="settings-item">
-                    <div class="left"><span class="icon">📱</span><div class="info"><div class="title">Версия</div><div class="desc">GiftArcade v2.4</div></div></div>
+                    <div class="left">
+                        <span class="icon"><i data-lucide="smartphone" style="width:20px;height:20px;"></i></span>
+                        <div class="info"><div class="title">Версия</div><div class="desc">GiftArcade v2.5</div></div>
+                    </div>
                     <div class="right">2026</div>
                 </div>
                 <div class="settings-item" onclick="App.showAbout()">
-                    <div class="left"><span class="icon">📖</span><div class="info"><div class="title">О проекте</div></div></div>
+                    <div class="left">
+                        <span class="icon"><i data-lucide="info" style="width:20px;height:20px;"></i></span>
+                        <div class="info"><div class="title">О проекте</div></div>
+                    </div>
                     <div class="right">→</div>
                 </div>
             </div>
@@ -167,26 +235,28 @@
 
         <!-- ===== СТРАНИЦА: ИГРА ===== -->
         <div class="page" id="page-game">
-            <button class="back-btn" onclick="App.goHome()" style="margin-bottom:12px;">← Назад</button>
+            <button class="back-btn" onclick="App.goHome()" style="margin-bottom:12px;">
+                <i data-lucide="arrow-left" style="width:18px;height:18px;display:inline-block;vertical-align:middle;"></i> Назад
+            </button>
             <div id="gameContent"></div>
         </div>
 
         <!-- ===== BOTTOM NAV ===== -->
         <div class="bottom-nav">
             <button class="nav-item active" data-page="home">
-                <span class="nav-icon">🏠</span>
+                <i data-lucide="home" class="nav-icon"></i>
                 <span class="nav-label">Главная</span>
             </button>
             <button class="nav-item" data-page="shop">
-                <span class="nav-icon">🛒</span>
+                <i data-lucide="shopping-bag" class="nav-icon"></i>
                 <span class="nav-label">Магазин</span>
             </button>
             <button class="nav-item" data-page="games">
-                <span class="nav-icon">🎮</span>
+                <i data-lucide="gamepad-2" class="nav-icon"></i>
                 <span class="nav-label">Игры</span>
             </button>
             <button class="nav-item" data-page="profile">
-                <span class="nav-icon">👤</span>
+                <i data-lucide="user" class="nav-icon"></i>
                 <span class="nav-label">Профиль</span>
             </button>
         </div>
