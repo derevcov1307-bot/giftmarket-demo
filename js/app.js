@@ -23,14 +23,14 @@ const App = {
             id: 'plinko', 
             title: 'Plinko', 
             desc: 'Шарик в ячейки с множителями', 
-            icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417118.png',
+            icon: 'https://rabbits.gift/assets/plinko2.webp',
             status: '🔥' 
         },
         { 
             id: 'coinflip', 
             title: 'Coin Flip', 
             desc: 'Орёл или решка — удвой ставку', 
-            icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417085.png',
+            icon: 'https://rabbits.gift/assets/coin.webp',
             status: '' 
         },
         { 
