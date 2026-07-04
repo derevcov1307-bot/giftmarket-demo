@@ -20,17 +20,19 @@
     cursor: pointer;
     transition: var(--transition);
     backdrop-filter: blur(10px);
+    animation: slideIn 0.4s ease forwards;
+    opacity: 0;
 }
+.games-list .settings-item:nth-child(1) { animation-delay: 0.05s; }
+.games-list .settings-item:nth-child(2) { animation-delay: 0.1s; }
+.games-list .settings-item:nth-child(3) { animation-delay: 0.15s; }
 
 .games-list .settings-item:hover {
     background: var(--bg-card-hover);
     border-color: rgba(255,107,107,0.1);
     transform: translateX(4px);
 }
-
-.games-list .settings-item:active {
-    transform: scale(0.98);
-}
+.games-list .settings-item:active { transform: scale(0.98); }
 
 .games-list .settings-item .left {
     display: flex;
@@ -38,36 +40,58 @@
     gap: 12px;
 }
 
-.games-list .settings-item .left .icon {
-    font-size: 26px;
-}
-
+.games-list .settings-item .left .icon { font-size: 26px; }
 .games-list .settings-item .left .info .title {
     font-size: 15px;
     font-weight: 500;
 }
-
 .games-list .settings-item .left .info .desc {
     font-size: 12px;
     color: var(--text-secondary);
 }
-
 .games-list .settings-item .right {
     color: var(--text-secondary);
     font-size: 14px;
+}
+
+/* ---------- КАРТИНКИ ИГР ---------- */
+.game-icon-wrapper {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--bg-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+.game-icon-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+    transition: var(--transition);
+}
+.settings-item:hover .game-icon-wrapper {
+    border-color: rgba(255,107,107,0.3);
+    transform: scale(1.05);
+}
+.settings-item:hover .game-icon-wrapper img {
+    transform: scale(1.1);
 }
 
 /* ---------- ИГРОВАЯ СТРАНИЦА ---------- */
 .game-page-container {
     padding: 4px 0 16px 0;
 }
-
 .game-title {
     font-size: 22px;
     font-weight: 700;
     text-align: center;
 }
-
 .game-subtitle {
     font-size: 14px;
     color: var(--text-secondary);
@@ -84,317 +108,22 @@
     border: 1px solid var(--border-color);
     text-align: center;
     backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
 }
-
 .game-area .result-display {
     font-size: 42px;
     font-weight: 700;
     margin: 8px 0;
 }
-
 .game-area .result-display.win {
     color: #4ecdc4;
     animation: glowPulse 1.5s ease-in-out infinite;
 }
+.game-area .result-display.lose { color: #ff6b6b; }
+.game-area .game-emoji { font-size: 60px; display: block; margin: 4px 0; }
 
-.game-area .result-display.lose {
-    color: #ff6b6b;
-}
-
-.game-area .game-emoji {
-    font-size: 60px;
-    display: block;
-    margin: 4px 0;
-}
-
-/* ---------- PLINKO ЯЧЕЙКИ ---------- */
-.plinko-cell {
-    transition: all 0.3s ease;
-    cursor: default;
-    position: relative;
-}
-
-.plinko-cell.highlight {
-    transform: scale(1.2);
-    box-shadow: 0 0 20px rgba(255,107,107,0.3);
-}
-
-/* ---------- CRASH ПРОГРЕСС ---------- */
-#crashMultiplier {
-    transition: color 0.3s ease;
-    font-family: 'Inter', monospace;
-}
-
-#crashProgress {
-    background: var(--gradient);
-    box-shadow: 0 0 20px rgba(255,107,107,0.2);
-}
-
-/* ---------- АНИМАЦИЯ МОНЕТЫ ---------- */
-#coinResult {
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    display: inline-block;
-}
-
-#coinResult.win {
-    animation: glowPulse 1.5s ease-in-out infinite;
-}
-
-/* ---------- УПРАВЛЕНИЕ СТАВКОЙ ---------- */
-.bet-controls {
-    display: flex;
-    gap: 10px;
-    margin: 14px 0;
-}
-
-.bet-controls input {
-    flex: 1;
-    padding: 12px 16px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border-color);
-    background: var(--bg-card);
-    color: var(--text-primary);
-    font-size: 16px;
-    font-weight: 600;
-    outline: none;
-    min-width: 0;
-    transition: var(--transition);
-}
-
-.bet-controls input:focus {
-    border-color: rgba(255,107,107,0.3);
-    box-shadow: 0 0 0 3px rgba(255,107,107,0.05);
-}
-
-.bet-controls button {
-    padding: 12px 24px;
-    border-radius: var(--radius);
-    border: none;
-    background: var(--gradient);
-    color: #fff;
-    font-weight: 600;
-    font-size: 15px;
-    cursor: pointer;
-    transition: var(--transition);
-    white-space: nowrap;
-}
-
-.bet-controls button:active {
-    transform: scale(0.95);
-}
-
-.bet-controls button:hover {
-    box-shadow: var(--glow);
-}
-
-.bet-controls button:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    transform: none !important;
-}
-
-/* ---------- БЫСТРЫЕ СТАВКИ ---------- */
-.quick-bets {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-bottom: 10px;
-}
-
-.quick-bets button {
-    padding: 6px 14px;
-    border-radius: 100px;
-    border: 1px solid var(--border-color);
-    background: var(--bg-card);
-    color: var(--text-secondary);
-    font-size: 12px;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.quick-bets button:hover {
-    background: var(--bg-card-hover);
-    color: var(--text-primary);
-}
-
-.quick-bets button:active {
-    transform: scale(0.95);
-}
-
-/* ---------- ИСТОРИЯ ---------- */
-.game-history {
-    font-size: 12px;
-    color: var(--text-secondary);
-    max-height: 44px;
-    overflow-y: auto;
-    margin-top: 8px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    justify-content: center;
-}
-
-.game-history span {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 6px;
-    background: var(--bg-card);
-}
-
-.game-history span.win {
-    color: #4ecdc4;
-    background: rgba(78,205,196,0.1);
-}
-
-.game-history span.lose {
-    color: #ff6b6b;
-    background: rgba(255,107,107,0.1);
-}
-
-/* ---------- КНОПКИ В ИГРАХ ---------- */
-.game-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-top: 10px;
-}
-
-.game-actions button {
-    padding: 10px 22px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border-color);
-    background: var(--bg-card);
-    color: var(--text-primary);
-    font-size: 14px;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.game-actions button:hover {
-    background: var(--bg-card-hover);
-}
-
-.game-actions button:active {
-    transform: scale(0.95);
-}
-
-.game-actions button.primary {
-    background: var(--gradient);
-    color: #fff;
-    border: none;
-}
-
-.game-actions button.primary:hover {
-    box-shadow: var(--glow);
-}
-
-.game-actions button:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-/* ---------- АНИМАЦИИ ---------- */
-@keyframes glowPulse {
-    0%, 100% {
-        box-shadow: 0 0 20px rgba(78,205,196,0.1);
-    }
-    50% {
-        box-shadow: 0 0 40px rgba(78,205,196,0.3);
-    }
-}
-
-/* ---------- АДАПТИВ ---------- */
-@media (max-width: 380px) {
-    .game-area {
-        padding: 16px 12px;
-        min-height: 140px;
-    }
-    .game-area .result-display {
-        font-size: 28px;
-    }
-    .game-area .game-emoji {
-        font-size: 40px;
-    }
-    .bet-controls input {
-        font-size: 13px;
-        padding: 8px 10px;
-    }
-    .bet-controls button {
-        font-size: 12px;
-        padding: 8px 14px;
-    }
-    .game-title {
-        font-size: 18px;
-    }
-    .game-subtitle {
-        font-size: 12px;
-    }
-}
-
-@media (orientation: landscape) and (max-height: 500px) {
-    .game-area {
-        min-height: 120px;
-        padding: 12px 10px;
-    }
-    .game-area .result-display {
-        font-size: 28px;
-    }
-    .game-area .game-emoji {
-        font-size: 36px;
-    }
-    .bet-controls {
-        margin: 8px 0;
-    }
-    .bet-controls input {
-        padding: 6px 10px;
-        font-size: 13px;
-    }
-    .bet-controls button {
-        padding: 6px 14px;
-        font-size: 12px;
-    }
-    .game-history {
-        max-height: 30px;
-    }
-}
-/* ---------- КАРТИНКИ ИГР ---------- */
-.game-icon-wrapper {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    overflow: hidden;
-    flex-shrink: 0;
-    background: var(--bg-card);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--border-color);
-    transition: var(--transition);
-}
-
-.game-icon-wrapper img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 12px;
-    transition: var(--transition);
-}
-
-.settings-item:hover .game-icon-wrapper {
-    border-color: rgba(255,107,107,0.3);
-    transform: scale(1.05);
-}
-
-.settings-item:hover .game-icon-wrapper img {
-    transform: scale(1.1);
-}
-/* ============================================================
-   PLINKO RABBITS СТИЛИ
-   ============================================================ */
-
-/* ---------- ВЕРХНИЙ РЯД МНОЖИТЕЛЕЙ ---------- */
+/* ---------- PLINKO ---------- */
 .plinko-multipliers {
     display: grid;
     grid-template-columns: repeat(11, 1fr);
@@ -402,7 +131,6 @@
     max-width: 340px;
     margin: 0 auto 16px auto;
 }
-
 .plinko-multiplier {
     text-align: center;
     padding: 8px 0;
@@ -414,68 +142,58 @@
     transition: all 0.3s ease;
     font-family: 'Inter', monospace;
 }
-
 .plinko-multiplier.high {
     color: #ff6b6b;
     border-color: rgba(255,107,107,0.25);
     background: rgba(255,107,107,0.08);
-    text-shadow: 0 0 20px rgba(255,107,107,0.1);
 }
-
 .plinko-multiplier.medium {
     color: #ffd93d;
     border-color: rgba(255,215,0,0.2);
     background: rgba(255,215,0,0.06);
 }
-
 .plinko-multiplier.low {
     color: var(--text-secondary);
     border-color: var(--border-color);
 }
 
-/* ---------- ЯЧЕЙКИ PLINKO ---------- */
+.plinko-grid {
+    position: relative;
+    min-height: 180px;
+}
 .plinko-cell {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
     cursor: default;
     position: relative;
     border-radius: 8px;
 }
+.plinko-cell:hover { transform: scale(1.05); }
 
-.plinko-cell::after {
-    content: '';
+.plinko-ball {
     position: absolute;
-    inset: -1px;
-    border-radius: 9px;
-    opacity: 0;
-    transition: all 0.3s ease;
+    font-size: 28px;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    transition: none;
+    z-index: 10;
+    filter: drop-shadow(0 0 10px rgba(255,107,107,0.5));
     pointer-events: none;
 }
 
-.plinko-cell:hover {
-    transform: scale(1.05);
-}
-
-.plinko-cell.highlight {
-    transform: scale(1.25);
-    box-shadow: 0 0 30px rgba(255,107,107,0.2);
-    z-index: 2;
-}
-
-/* ---------- УПРАВЛЕНИЕ ---------- */
+/* ---------- УПРАВЛЕНИЕ PLINKO ---------- */
 .plinko-controls {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
     margin: 16px 0;
 }
-
 .plinko-control-group {
     background: var(--bg-card);
     border-radius: var(--radius);
     padding: 12px 14px;
     border: 1px solid var(--border-color);
 }
-
 .plinko-control-group label {
     display: block;
     font-size: 11px;
@@ -485,13 +203,11 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
-
 .plinko-bet-control {
     display: flex;
     align-items: center;
     gap: 6px;
 }
-
 .plinko-bet-control button {
     width: 34px;
     height: 34px;
@@ -507,16 +223,11 @@
     justify-content: center;
     font-weight: 300;
 }
-
 .plinko-bet-control button:hover {
     background: var(--bg-card-hover);
     border-color: rgba(255,107,107,0.2);
 }
-
-.plinko-bet-control button:active {
-    transform: scale(0.9);
-}
-
+.plinko-bet-control button:active { transform: scale(0.9); }
 .plinko-bet-control input {
     flex: 1;
     padding: 8px 6px;
@@ -531,17 +242,13 @@
     min-width: 0;
     font-family: 'Inter', monospace;
 }
-
 .plinko-bet-control input:focus {
     border-color: rgba(255,107,107,0.3);
     box-shadow: 0 0 0 3px rgba(255,107,107,0.05);
 }
+.plinko-bet-control input::-webkit-inner-spin-button { -webkit-appearance: none; }
 
-.plinko-bet-control input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-}
-
-/* ---------- РИСК ---------- */
+/* ---------- РИСК PLINKO ---------- */
 .plinko-risk {
     display: flex;
     align-items: center;
@@ -553,19 +260,16 @@
     border-radius: var(--radius);
     border: 1px solid var(--border-color);
 }
-
 .plinko-risk > span {
     font-size: 13px;
     font-weight: 500;
     color: var(--text-secondary);
 }
-
 .plinko-risk-buttons {
     display: flex;
     gap: 6px;
     flex: 1;
 }
-
 .plinko-risk-btn {
     flex: 1;
     padding: 8px 14px;
@@ -580,31 +284,25 @@
     text-transform: uppercase;
     letter-spacing: 0.3px;
 }
-
 .plinko-risk-btn:hover {
     background: var(--bg-card-hover);
     color: var(--text-primary);
 }
-
 .plinko-risk-btn.active {
     background: var(--gradient);
     color: #fff;
     border-color: transparent;
     box-shadow: var(--glow);
 }
+.plinko-risk-btn:active { transform: scale(0.95); }
 
-.plinko-risk-btn:active {
-    transform: scale(0.95);
-}
-
-/* ---------- КНОПКИ ДЕЙСТВИЙ ---------- */
+/* ---------- КНОПКИ PLINKO ---------- */
 .plinko-actions {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 1fr;
     gap: 10px;
     margin: 16px 0;
 }
-
 .plinko-play-btn {
     padding: 16px;
     border-radius: var(--radius);
@@ -619,7 +317,6 @@
     position: relative;
     overflow: hidden;
 }
-
 .plinko-play-btn::before {
     content: '';
     position: absolute;
@@ -628,81 +325,24 @@
     opacity: 0;
     transition: all 0.3s ease;
 }
-
-.plinko-play-btn:hover::before {
-    opacity: 1;
-}
-
+.plinko-play-btn:hover::before { opacity: 1; }
 .plinko-play-btn:hover {
     transform: translateY(-2px);
     box-shadow: var(--glow-strong);
 }
-
-.plinko-play-btn:active {
-    transform: scale(0.97);
-}
-
+.plinko-play-btn:active { transform: scale(0.97); }
 .plinko-play-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     transform: none !important;
 }
 
-.plinko-refill-btn {
-    padding: 16px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border-color);
-    background: var(--bg-card);
-    color: var(--text-primary);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.plinko-refill-btn:hover {
-    background: var(--bg-card-hover);
-    border-color: rgba(255,107,107,0.2);
-}
-
-.plinko-refill-btn:active {
-    transform: scale(0.95);
-}
-
-/* ---------- АДАПТИВ ---------- */
-@media (max-width: 380px) {
-    .plinko-multipliers {
-        gap: 3px;
-    }
-    .plinko-multiplier {
-        font-size: 10px;
-        padding: 6px 0;
-    }
-    .plinko-controls {
-        grid-template-columns: 1fr;
-        gap: 8px;
-    }
-    .plinko-risk {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-    }
-    .plinko-actions {
-        grid-template-columns: 1fr;
-        gap: 8px;
-    }
-}
-/* ============================================================
-   COIN FLIP СТИЛИ
-   ============================================================ */
-
-/* ---------- КОНТЕЙНЕР МОНЕТЫ ---------- */
+/* ---------- COIN FLIP ---------- */
 .coin-container {
     perspective: 800px;
     display: inline-block;
     margin: 0 auto;
 }
-
 .coin {
     width: 100px;
     height: 100px;
@@ -711,216 +351,6 @@
     transition: all 0.3s ease;
     margin: 0 auto;
 }
-
-.coin-front, .coin-back {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    backface-visibility: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 48px;
-    background: var(--gradient);
-    box-shadow: 0 4px 20px rgba(255,107,107,0.2);
-    border: 2px solid rgba(255,255,255,0.1);
-}
-
-.coin-front {
-    transform: rotateY(0deg);
-}
-
-.coin-back {
-    transform: rotateY(180deg);
-}
-
-/* ---------- АНИМАЦИЯ МОНЕТЫ ---------- */
-@keyframes coinFlip {
-    0% { transform: rotateY(0deg) scale(1); }
-    25% { transform: rotateY(720deg) scale(1.1); }
-    50% { transform: rotateY(1080deg) scale(1); }
-    75% { transform: rotateY(1440deg) scale(1.05); }
-    100% { transform: rotateY(1800deg) scale(1); }
-}
-
-.coin.win {
-    animation: coinWin 0.6s ease;
-}
-
-.coin.lose {
-    animation: coinLose 0.6s ease;
-}
-
-@keyframes coinWin {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.2); box-shadow: 0 0 40px rgba(78,205,196,0.5); }
-    100% { transform: scale(1); }
-}
-
-@keyframes coinLose {
-    0% { transform: scale(1); }
-    50% { transform: scale(0.8); box-shadow: 0 0 40px rgba(255,107,107,0.5); }
-    100% { transform: scale(1); }
-}
-
-/* ---------- КНОПКИ ОРЁЛ/РЕШКА ---------- */
-.coin-btn {
-    padding: 10px 24px;
-    border-radius: var(--radius);
-    border: 2px solid var(--border-color);
-    background: var(--bg-card);
-    color: var(--text-primary);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.coin-btn:hover {
-    background: var(--bg-card-hover);
-    transform: translateY(-2px);
-}
-
-.coin-btn:active {
-    transform: scale(0.95);
-}
-
-.coin-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    transform: none !important;
-}
-
-.coin-btn.heads:hover {
-    border-color: #ffd93d;
-    box-shadow: 0 0 20px rgba(255,215,0,0.1);
-}
-
-.coin-btn.tails:hover {
-    border-color: #ff6b6b;
-    box-shadow: 0 0 20px rgba(255,107,107,0.1);
-}
-
-.coin-btn-icon {
-    font-size: 20px;
-}
-
-.random-btn {
-    padding: 12px 24px;
-    border-radius: var(--radius);
-    border: none;
-    background: var(--gradient);
-    color: #fff;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.random-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--glow);
-}
-
-.random-btn:active {
-    transform: scale(0.95);
-}
-/* ============================================================
-   CRASH СТИЛИ
-   ============================================================ */
-
-/* ---------- ГРАФИК ---------- */
-.crash-chart {
-    background: rgba(0,0,0,0.3);
-    border-radius: var(--radius);
-    padding: 8px;
-    margin-bottom: 8px;
-    border: 1px solid var(--border-color);
-}
-
-#crashCanvas {
-    width: 100%;
-    height: auto;
-    max-height: 140px;
-    display: block;
-    border-radius: 8px;
-}
-
-/* ---------- АНИМАЦИЯ ДЛЯ CRASH ---------- */
-#crashMultiplier {
-    transition: color 0.3s ease;
-    font-family: 'Inter', monospace;
-}
-
-#crashProgress {
-    background: var(--gradient);
-    box-shadow: 0 0 20px rgba(255,107,107,0.2);
-    transition: width 0.2s ease;
-}
-
-/* ---------- КНОПКИ ---------- */
-#crashBtn {
-    transition: all 0.3s ease;
-}
-
-#crashBtn:not(:disabled):hover {
-    transform: scale(1.05);
-}
-
-#crashBtn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none !important;
-}
-
-#crashStartBtn {
-    transition: all 0.3s ease;
-}
-
-#crashStartBtn:not(:disabled):hover {
-    background: var(--bg-card-hover);
-    transform: translateY(-2px);
-}
-
-#crashStartBtn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    transform: none !important;
-}
-
-/* ---------- АДАПТИВ ---------- */
-@media (max-width: 380px) {
-    .crash-chart {
-        padding: 4px;
-    }
-    #crashCanvas {
-        max-height: 100px;
-    }
-}
-/* ============================================================
-   МОНЕТА КАК НА СКРИНШОТЕ RABBITS
-   ============================================================ */
-
-/* ---------- КОНТЕЙНЕР МОНЕТЫ ---------- */
-.coin-container {
-    perspective: 800px;
-    display: inline-block;
-    margin: 0 auto;
-}
-
-.coin {
-    width: 100px;
-    height: 100px;
-    position: relative;
-    transform-style: preserve-3d;
-    transition: all 0.3s ease;
-    margin: 0 auto;
-}
-
 .coin-front, .coin-back {
     position: absolute;
     width: 100%;
@@ -938,16 +368,9 @@
         inset 0 4px 10px rgba(255,255,255,0.3);
     border: 3px solid rgba(255,215,0,0.3);
 }
+.coin-front { transform: rotateY(0deg); }
+.coin-back { transform: rotateY(180deg); }
 
-.coin-front {
-    transform: rotateY(0deg);
-}
-
-.coin-back {
-    transform: rotateY(180deg);
-}
-
-/* ---------- АНИМАЦИЯ МОНЕТЫ ---------- */
 @keyframes coinFlip {
     0% { transform: rotateY(0deg) scale(1); }
     25% { transform: rotateY(720deg) scale(1.1); }
@@ -955,28 +378,19 @@
     75% { transform: rotateY(1440deg) scale(1.05); }
     100% { transform: rotateY(1800deg) scale(1); }
 }
-
-.coin.win {
-    animation: coinWin 0.6s ease;
-}
-
-.coin.lose {
-    animation: coinLose 0.6s ease;
-}
-
+.coin.win { animation: coinWin 0.6s ease; }
+.coin.lose { animation: coinLose 0.6s ease; }
 @keyframes coinWin {
     0% { transform: scale(1); }
     50% { transform: scale(1.2); box-shadow: 0 0 40px rgba(78,205,196,0.5); }
     100% { transform: scale(1); }
 }
-
 @keyframes coinLose {
     0% { transform: scale(1); }
     50% { transform: scale(0.8); box-shadow: 0 0 40px rgba(255,107,107,0.5); }
     100% { transform: scale(1); }
 }
 
-/* ---------- КНОПКИ ОРЁЛ/РЕШКА ---------- */
 .coin-btn {
     padding: 10px 24px;
     border-radius: var(--radius);
@@ -991,35 +405,25 @@
     align-items: center;
     gap: 8px;
 }
-
 .coin-btn:hover {
     background: var(--bg-card-hover);
     transform: translateY(-2px);
 }
-
-.coin-btn:active {
-    transform: scale(0.95);
-}
-
+.coin-btn:active { transform: scale(0.95); }
 .coin-btn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
     transform: none !important;
 }
-
 .coin-btn.heads:hover {
     border-color: #ffd93d;
     box-shadow: 0 0 20px rgba(255,215,0,0.1);
 }
-
 .coin-btn.tails:hover {
     border-color: #ff6b6b;
     box-shadow: 0 0 20px rgba(255,107,107,0.1);
 }
-
-.coin-btn-icon {
-    font-size: 20px;
-}
+.coin-btn-icon { font-size: 20px; }
 
 .random-btn {
     padding: 12px 24px;
@@ -1032,51 +436,192 @@
     cursor: pointer;
     transition: all 0.3s ease;
 }
-
 .random-btn:hover {
     transform: translateY(-2px);
     box-shadow: var(--glow);
 }
+.random-btn:active { transform: scale(0.95); }
 
-.random-btn:active {
-    transform: scale(0.95);
+/* ---------- CRASH ---------- */
+.crash-chart {
+    background: rgba(0,0,0,0.3);
+    border-radius: var(--radius);
+    padding: 8px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border-color);
 }
-/* ============================================================
-   АНИМАЦИЯ ШАРИКА ДЛЯ PLINKO
-   ============================================================ */
-
-.plinko-grid {
-    position: relative;
-    min-height: 180px;
+#crashCanvas {
+    width: 100%;
+    height: auto;
+    max-height: 140px;
+    display: block;
+    border-radius: 8px;
+}
+#crashMultiplier {
+    transition: color 0.3s ease;
+    font-family: 'Inter', monospace;
+}
+#crashProgress {
+    background: var(--gradient);
+    box-shadow: 0 0 20px rgba(255,107,107,0.2);
+    transition: width 0.2s ease;
+}
+#crashBtn { transition: all 0.3s ease; }
+#crashBtn:not(:disabled):hover { transform: scale(1.05); }
+#crashBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+#crashStartBtn { transition: all 0.3s ease; }
+#crashStartBtn:not(:disabled):hover {
+    background: var(--bg-card-hover);
+    transform: translateY(-2px);
+}
+#crashStartBtn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none !important;
 }
 
-.plinko-ball {
-    position: absolute;
-    font-size: 28px;
-    left: 50%;
-    top: 0;
-    transform: translateX(-50%);
-    transition: none;
-    z-index: 10;
-    filter: drop-shadow(0 0 10px rgba(255,107,107,0.5));
-    pointer-events: none;
+/* ---------- УПРАВЛЕНИЕ СТАВКОЙ ---------- */
+.bet-controls {
+    display: flex;
+    gap: 10px;
+    margin: 14px 0;
+}
+.bet-controls input {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 16px;
+    font-weight: 600;
+    outline: none;
+    min-width: 0;
+    transition: var(--transition);
+}
+.bet-controls input:focus {
+    border-color: rgba(255,107,107,0.3);
+    box-shadow: 0 0 0 3px rgba(255,107,107,0.05);
+}
+.bet-controls button {
+    padding: 12px 24px;
+    border-radius: var(--radius);
+    border: none;
+    background: var(--gradient);
+    color: #fff;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+.bet-controls button:active { transform: scale(0.95); }
+.bet-controls button:hover { box-shadow: var(--glow); }
+.bet-controls button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none !important;
 }
 
-.plinko-ball.show {
-    display: block !important;
+/* ---------- БЫСТРЫЕ СТАВКИ ---------- */
+.quick-bets {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+.quick-bets button {
+    padding: 6px 14px;
+    border-radius: 100px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.quick-bets button:hover {
+    background: var(--bg-card-hover);
+    color: var(--text-primary);
+}
+.quick-bets button:active { transform: scale(0.95); }
+
+/* ---------- ИСТОРИЯ ---------- */
+.game-history {
+    font-size: 12px;
+    color: var(--text-secondary);
+    max-height: 44px;
+    overflow-y: auto;
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+}
+.game-history span {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: var(--bg-card);
+}
+.game-history span.win {
+    color: #4ecdc4;
+    background: rgba(78,205,196,0.1);
+}
+.game-history span.lose {
+    color: #ff6b6b;
+    background: rgba(255,107,107,0.1);
 }
 
-/* ---------- АНИМАЦИЯ ПОПАДАНИЯ ---------- */
+/* ---------- КНОПКИ В ИГРАХ ---------- */
+.game-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+.game-actions button {
+    padding: 10px 22px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.game-actions button:hover {
+    background: var(--bg-card-hover);
+}
+.game-actions button:active { transform: scale(0.95); }
+.game-actions button.primary {
+    background: var(--gradient);
+    color: #fff;
+    border: none;
+}
+.game-actions button.primary:hover { box-shadow: var(--glow); }
+.game-actions button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ---------- АНИМАЦИИ ---------- */
+@keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(78,205,196,0.1); }
+    50% { box-shadow: 0 0 40px rgba(78,205,196,0.3); }
+}
 @keyframes hitPulse {
     0% { transform: scale(1); }
     50% { transform: scale(1.5); box-shadow: 0 0 40px rgba(255,107,107,0.4); }
     100% { transform: scale(1); }
 }
-
-.plinko-cell.hit {
-    animation: hitPulse 0.5s ease;
-}
-
+.plinko-cell.hit { animation: hitPulse 0.5s ease; }
 .plinko-cell.win-hit {
     animation: hitPulse 0.5s ease;
     background: rgba(78,205,196,0.3) !important;
