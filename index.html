@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GiftArcade — игры с выводом</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
             margin: 0;
@@ -25,7 +26,6 @@
                 radial-gradient(ellipse at 80% 50%, rgba(255, 51, 102, 0.05) 0%, transparent 50%);
         }
         
-        /* ===== ОСНОВНОЙ КОНТЕЙНЕР ===== */
         .app-container {
             width: 100%;
             max-width: 400px;
@@ -40,17 +40,23 @@
                 0 30px 80px rgba(0, 0, 0, 0.6),
                 inset 0 1px 0 rgba(255, 255, 255, 0.05);
             position: relative;
+            min-height: 600px;
         }
         
-        .app-container::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle at 30% 20%, rgba(255, 107, 107, 0.03) 0%, transparent 50%);
-            pointer-events: none;
+        /* ===== СТРАНИЦЫ ===== */
+        .page {
+            display: none;
+            padding: 0 20px 20px 20px;
+            animation: fadeIn 0.4s ease;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         /* ===== ВЕРХНИЙ БАР ===== */
@@ -120,6 +126,12 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .balance:hover {
+            background: rgba(255, 255, 255, 0.08);
         }
         
         .balance span {
@@ -129,7 +141,7 @@
         
         /* ===== ПРОФИЛЬ ===== */
         .profile-card {
-            margin: 8px 20px 20px 20px;
+            margin: 8px 0 20px 0;
             padding: 18px 20px;
             background: rgba(255, 255, 255, 0.03);
             border-radius: 20px;
@@ -159,23 +171,17 @@
             flex-shrink: 0;
             box-shadow: 0 4px 20px rgba(255, 51, 102, 0.15);
             position: relative;
-        }
-        
-        .profile-avatar::after {
-            content: '';
-            position: absolute;
-            inset: -2px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #ff6b6b, #ff3366);
-            opacity: 0.3;
-            filter: blur(12px);
-            z-index: -1;
+            overflow: hidden;
         }
         
         .profile-avatar img {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .profile-avatar .default-avatar {
+            font-size: 28px;
         }
         
         .profile-info {
@@ -215,7 +221,6 @@
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 8px;
-            padding: 0 20px;
             margin-bottom: 20px;
         }
         
@@ -258,7 +263,6 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
-            padding: 0 20px;
             margin-bottom: 20px;
         }
         
@@ -282,19 +286,6 @@
             background: linear-gradient(135deg, #ff6b6b, #ff3366);
             color: #fff;
             box-shadow: 0 4px 24px rgba(255, 51, 102, 0.2);
-        }
-        
-        .action-btn.primary::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        
-        .action-btn.primary:hover::before {
-            opacity: 1;
         }
         
         .action-btn.primary:hover {
@@ -322,9 +313,14 @@
             grid-column: 1 / -1;
         }
         
+        .action-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
         /* ===== ИГРЫ ===== */
         .section-title {
-            padding: 0 20px;
             font-size: 16px;
             font-weight: 600;
             margin-bottom: 12px;
@@ -342,6 +338,8 @@
             font-weight: 500;
             opacity: 0.7;
             transition: opacity 0.3s;
+            border: none;
+            background-color: transparent;
         }
         
         .section-title .see-all:hover {
@@ -349,10 +347,10 @@
         }
         
         .games-list {
-            padding: 0 20px 20px 20px;
             display: flex;
             flex-direction: column;
             gap: 12px;
+            margin-bottom: 20px;
         }
         
         .game-card {
@@ -402,16 +400,11 @@
             position: relative;
             z-index: 1;
             transition: all 0.3s;
+            font-size: 28px;
         }
         
         .game-card:hover .game-icon {
             background: rgba(255, 255, 255, 0.08);
-        }
-        
-        .game-icon img {
-            width: 32px;
-            height: 32px;
-            object-fit: contain;
         }
         
         .game-info {
@@ -440,12 +433,6 @@
             color: rgba(255, 255, 255, 0.3);
         }
         
-        .game-info .meta span {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        
         .game-status {
             font-size: 11px;
             font-weight: 600;
@@ -469,6 +456,170 @@
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
+        }
+        
+        /* ===== ИГРОВАЯ СТРАНИЦА ===== */
+        .game-page {
+            text-align: center;
+            padding: 20px 0;
+        }
+        
+        .game-page .game-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .game-page .game-subtitle {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .game-area {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 30px 20px;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .game-area .result-display {
+            font-size: 48px;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .game-area .result-display.win {
+            color: #4ecdc4;
+        }
+        
+        .game-area .result-display.lose {
+            color: #ff6b6b;
+        }
+        
+        .bet-controls {
+            display: flex;
+            gap: 10px;
+            margin: 16px 0;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .bet-controls input {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.04);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        .bet-controls input:focus {
+            border-color: rgba(255, 107, 107, 0.3);
+            background: rgba(255, 255, 255, 0.06);
+        }
+        
+        .bet-controls input::placeholder {
+            color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .bet-controls button {
+            padding: 12px 24px;
+            border-radius: 14px;
+            border: none;
+            background: linear-gradient(135deg, #ff6b6b, #ff3366);
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        
+        .bet-controls button:hover:not(:disabled) {
+            transform: scale(1.03);
+            box-shadow: 0 8px 24px rgba(255, 51, 102, 0.3);
+        }
+        
+        .bet-controls button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        .quick-bets {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .quick-bets button {
+            padding: 6px 14px;
+            border-radius: 100px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.03);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .quick-bets button:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+        
+        .game-history {
+            margin-top: 16px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.3);
+            max-height: 60px;
+            overflow-y: auto;
+        }
+        
+        .game-history span {
+            display: inline-block;
+            margin: 0 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.04);
+        }
+        
+        .game-history span.win {
+            color: #4ecdc4;
+            background: rgba(78, 205, 196, 0.1);
+        }
+        
+        .game-history span.lose {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+        }
+        
+        .back-btn {
+            padding: 10px 20px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.03);
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
         }
         
         /* ===== НИЖНЯЯ НАВИГАЦИЯ ===== */
@@ -534,127 +685,6 @@
             transform: scale(1.1);
         }
         
-        .nav-item .nav-icon img {
-            width: 24px;
-            height: 24px;
-            filter: grayscale(1) brightness(0.4);
-            transition: all 0.3s;
-        }
-        
-        .nav-item.active .nav-icon img {
-            filter: none;
-        }
-        
-        .nav-item:hover .nav-icon img {
-            filter: grayscale(0.5) brightness(0.7);
-        }
-        
-        /* ===== МОДАЛКА ===== */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .modal-overlay.show {
-            display: flex;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; backdrop-filter: blur(0px); }
-            to { opacity: 1; backdrop-filter: blur(24px); }
-        }
-        
-        .modal-content {
-            background: rgba(20, 20, 40, 0.95);
-            backdrop-filter: blur(40px);
-            border-radius: 28px;
-            padding: 36px 28px;
-            max-width: 380px;
-            width: 100%;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            text-align: center;
-            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6);
-        }
-        
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        
-        .modal-content .modal-icon {
-            font-size: 56px;
-            margin-bottom: 12px;
-        }
-        
-        .modal-content .modal-icon img {
-            width: 64px;
-            height: 64px;
-            object-fit: contain;
-        }
-        
-        .modal-content h3 {
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            letter-spacing: -0.5px;
-        }
-        
-        .modal-content p {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 14px;
-            line-height: 1.7;
-            margin-bottom: 24px;
-        }
-        
-        .modal-content .modal-btn {
-            padding: 14px 40px;
-            border-radius: 16px;
-            border: none;
-            background: linear-gradient(135deg, #ff6b6b, #ff3366);
-            color: #fff;
-            font-weight: 600;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 24px rgba(255, 51, 102, 0.2);
-        }
-        
-        .modal-content .modal-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 32px rgba(255, 51, 102, 0.35);
-        }
-        
-        .modal-content .modal-btn:active {
-            transform: scale(0.97);
-        }
-        
-        .modal-content .modal-close {
-            margin-top: 14px;
-            background: transparent;
-            border: none;
-            color: rgba(255, 255, 255, 0.3);
-            font-size: 13px;
-            cursor: pointer;
-            transition: color 0.3s;
-        }
-        
-        .modal-content .modal-close:hover {
-            color: rgba(255, 255, 255, 0.6);
-        }
-        
         /* ===== АДАПТИВ ===== */
         @media (max-width: 440px) {
             body {
@@ -671,140 +701,280 @@
             .stats-grid .stat-box .number {
                 font-size: 18px;
             }
-            
-            .game-card {
-                padding: 14px;
-            }
         }
         
-        /* ===== СКРОЛЛ ===== */
-        ::-webkit-scrollbar {
-            width: 4px;
+        /* ===== АВТОРИЗАЦИЯ ===== */
+        .auth-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(30px);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
         }
         
-        ::-webkit-scrollbar-track {
-            background: transparent;
+        .auth-overlay.show {
+            display: flex;
         }
         
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
+        .auth-card {
+            background: rgba(20, 20, 40, 0.95);
+            backdrop-filter: blur(40px);
+            border-radius: 32px;
+            padding: 40px 32px;
+            max-width: 360px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6);
+            animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .auth-card .auth-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        
+        .auth-card h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .auth-card p {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        
+        .auth-btn {
+            padding: 16px 40px;
+            border-radius: 16px;
+            border: none;
+            background: linear-gradient(135deg, #ff6b6b, #ff3366);
+            color: #fff;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 24px rgba(255, 51, 102, 0.2);
+            width: 100%;
+        }
+        
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(255, 51, 102, 0.35);
+        }
+        
+        .auth-btn:active {
+            transform: scale(0.97);
+        }
+        
+        .auth-btn .tg-icon {
+            display: inline-block;
+            margin-right: 8px;
         }
     </style>
 </head>
 <body>
 
     <!-- ============================================================ -->
+    <!-- ЭКРАН АВТОРИЗАЦИИ -->
+    <!-- ============================================================ -->
+    <div class="auth-overlay show" id="authOverlay">
+        <div class="auth-card">
+            <div class="auth-icon">🎮</div>
+            <h2>GiftArcade</h2>
+            <p>Войдите через Telegram, чтобы начать играть и выигрывать звёзды</p>
+            <button class="auth-btn" onclick="authViaTelegram()">
+                <span class="tg-icon">✈️</span> Войти через Telegram
+            </button>
+            <div style="margin-top:12px;font-size:12px;color:rgba(255,255,255,0.2);">
+                Демо-версия · Данные не сохраняются
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
     <!-- ОСНОВНОЕ ПРИЛОЖЕНИЕ -->
     <!-- ============================================================ -->
-    <div class="app-container">
+    <div class="app-container" id="app" style="display:none;">
 
         <!-- Верхний бар -->
         <div class="top-bar">
             <div class="logo">
-                <div class="logo-icon">
-                    <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple@14.0.0/img/apple/64/1f3ae.png" alt="🎮">
-                </div>
+                <div class="logo-icon">🎮</div>
                 <span class="logo-text">GiftArcade</span>
             </div>
-            <div class="balance">
-                ⭐ <span id="userBalance">1 250</span>
+            <div class="balance" onclick="showBalance()">
+                ⭐ <span id="userBalance">1 000</span>
             </div>
         </div>
 
-        <!-- Профиль -->
-        <div class="profile-card">
-            <div class="profile-avatar">
-                <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple@14.0.0/img/apple/64/1f464.png" alt="👤">
-            </div>
-            <div class="profile-info">
-                <div class="name">Алексей</div>
-                <div class="sub">Игрок с 2024</div>
-                <div class="stats">
-                    <div class="stats-item">🏆 <strong id="winsCount">142</strong> побед</div>
-                    <div class="stats-item">🎁 <strong id="giftsCount">38</strong> подарков</div>
+        <!-- ===== ГЛАВНАЯ СТРАНИЦА ===== -->
+        <div class="page active" id="page-home">
+            <!-- Профиль -->
+            <div class="profile-card">
+                <div class="profile-avatar" id="userAvatar">
+                    <span class="default-avatar">👤</span>
+                </div>
+                <div class="profile-info">
+                    <div class="name" id="userName">Игрок</div>
+                    <div class="sub" id="userSub">Игрок с 2024</div>
+                    <div class="stats">
+                        <div class="stats-item">🏆 <strong id="winsCount">0</strong> побед</div>
+                        <div class="stats-item">🎁 <strong id="giftsCount">0</strong> подарков</div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Статистика -->
-        <div class="stats-grid">
-            <div class="stat-box">
-                <div class="number" id="totalGames">12 847</div>
-                <div class="label">Сыграно игр</div>
+            <!-- Статистика -->
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="number" id="totalGames">0</div>
+                    <div class="label">Сыграно игр</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="onlinePlayers">342</div>
+                    <div class="label">Сейчас играют</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="totalPrizes">5 231</div>
+                    <div class="label">Выдано призов</div>
+                </div>
             </div>
-            <div class="stat-box">
-                <div class="number" id="onlinePlayers">342</div>
-                <div class="label">Сейчас играют</div>
+
+            <!-- Кнопки -->
+            <div class="action-buttons">
+                <button class="action-btn primary" onclick="addBalance(100)">
+                    💰 +100⭐
+                </button>
+                <button class="action-btn secondary" onclick="addBalance(500)">
+                    💎 +500⭐
+                </button>
+                <button class="action-btn secondary full" onclick="resetBalance()">
+                    🔄 Сбросить баланс
+                </button>
             </div>
-            <div class="stat-box">
-                <div class="number" id="totalPrizes">5 231</div>
-                <div class="label">Выдано призов</div>
+
+            <!-- Игры -->
+            <div class="section-title">
+                <span>🎮 Игры</span>
+            </div>
+
+            <div class="games-list" id="gamesList">
+                <!-- Генерируется JS -->
             </div>
         </div>
 
-        <!-- Кнопки -->
-        <div class="action-buttons">
-            <button class="action-btn primary" onclick="openModal('deposit')">
-                💰 Пополнить
-            </button>
-            <button class="action-btn secondary" onclick="openModal('withdraw')">
-                💳 Вывести
-            </button>
-            <button class="action-btn secondary full" onclick="openModal('history')">
-                📜 История игр
-            </button>
-        </div>
-
-        <!-- Игры -->
-        <div class="section-title">
-            <span>🎮 Популярные игры</span>
-            <span class="see-all" onclick="openModal('all')">Все →</span>
-        </div>
-
-        <div class="games-list" id="gamesList">
-            <!-- Карточки генерируются JS -->
+        <!-- ===== СТРАНИЦА ИГРЫ ===== -->
+        <div class="page" id="page-game">
+            <button class="back-btn" onclick="goHome()">← Назад</button>
+            <div class="game-page">
+                <div class="game-title" id="gameTitle">Plinko</div>
+                <div class="game-subtitle" id="gameSubtitle">Угадай, куда упадёт шарик</div>
+                
+                <div class="game-area" id="gameArea">
+                    <div id="gameContent">
+                        <!-- Контент игры генерируется JS -->
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Нижняя навигация -->
         <div class="bottom-nav">
-            <button class="nav-item active" data-tab="home">
+            <button class="nav-item active" data-page="home">
                 <span class="nav-icon">🏠</span>
                 Главная
             </button>
-            <button class="nav-item" data-tab="games" onclick="openModal('games')">
+            <button class="nav-item" data-page="home">
                 <span class="nav-icon">🎮</span>
                 Игры
             </button>
-            <button class="nav-item" data-tab="top" onclick="openModal('top')">
+            <button class="nav-item" data-page="home">
                 <span class="nav-icon">🏆</span>
                 Топ
             </button>
-            <button class="nav-item" data-tab="gifts" onclick="openModal('gifts')">
+            <button class="nav-item" data-page="home">
                 <span class="nav-icon">🎁</span>
                 Подарки
             </button>
-            <button class="nav-item" data-tab="profile" onclick="openModal('profile')">
+            <button class="nav-item" data-page="home">
                 <span class="nav-icon">👤</span>
                 Профиль
             </button>
         </div>
     </div>
 
-    <!-- ============================================================ -->
-    <!-- МОДАЛКА -->
-    <!-- ============================================================ -->
-    <div class="modal-overlay" id="modal">
-        <div class="modal-content">
-            <div class="modal-icon" id="modalIcon">🎮</div>
-            <h3 id="modalTitle">Демо-версия</h3>
-            <p id="modalDesc">Это демонстрационная версия игровой платформы. Полный функционал будет доступен после подключения базы данных и API.</p>
-            <button class="modal-btn" onclick="closeModal()">Понятно!</button>
-            <button class="modal-close" onclick="closeModal()">Закрыть</button>
-        </div>
-    </div>
-
     <script>
+        // ============================================================
+        //  TELEGRAM АВТОРИЗАЦИЯ
+        // ============================================================
+        
+        let tg = null;
+        let user = null;
+        let balance = 1000;
+        let totalGames = 0;
+        let wins = 0;
+        let gameHistory = [];
+        
+        function authViaTelegram() {
+            try {
+                tg = window.Telegram.WebApp;
+                tg.expand();
+                user = tg.initDataUnsafe?.user || {
+                    id: 123456,
+                    first_name: 'Игрок',
+                    last_name: '',
+                    username: 'player',
+                    photo_url: null
+                };
+                
+                document.getElementById('authOverlay').classList.remove('show');
+                document.getElementById('app').style.display = 'block';
+                
+                initApp();
+            } catch (e) {
+                // Демо-режим если Telegram API недоступен
+                user = {
+                    id: 123456,
+                    first_name: 'Демо',
+                    last_name: 'Игрок',
+                    username: 'demo_player',
+                    photo_url: null
+                };
+                document.getElementById('authOverlay').classList.remove('show');
+                document.getElementById('app').style.display = 'block';
+                initApp();
+            }
+        }
+        
+        // ============================================================
+        //  ИНИЦИАЛИЗАЦИЯ
+        // ============================================================
+        
+        function initApp() {
+            document.getElementById('userName').textContent = 
+                user.first_name + (user.last_name ? ' ' + user.last_name : '');
+            
+            if (user.photo_url) {
+                document.querySelector('.profile-avatar').innerHTML = 
+                    `<img src="${user.photo_url}" alt="avatar">`;
+            }
+            
+            updateUI();
+            renderGames();
+            setupNavigation();
+        }
+        
         // ============================================================
         //  ДАННЫЕ ИГР
         // ============================================================
@@ -813,51 +983,39 @@
             {
                 id: 'plinko',
                 title: 'Plinko',
-                desc: 'Угадай, куда упадёт шарик',
-                icon: 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple@14.0.0/img/apple/64/1f3b2.png',
-                players: '1.2K',
-                prize: 'до x1000',
+                desc: 'Шарик падает в ячейки с множителями',
+                icon: '🎲',
                 status: '🔥 Хайп'
             },
             {
                 id: 'coinflip',
                 title: 'Coin Flip',
                 desc: 'Орёл или решка — удвой ставку',
-                icon: 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple@14.0.0/img/apple/64/1f3af.png',
-                players: '876',
-                prize: 'x2',
+                icon: '🪙',
                 status: 'Популярно'
             },
             {
                 id: 'crash',
                 title: 'Crash',
                 desc: 'Забери выигрыш до падения',
-                icon: 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple@14.0.0/img/apple/64/1f4c8.png',
-                players: '2.3K',
-                prize: 'до x100',
+                icon: '📈',
                 status: 'Играть'
             }
         ];
         
         // ============================================================
-        //  ОТРИСОВКА
+        //  ОТРИСОВКА ИГР
         // ============================================================
         
         function renderGames() {
             const list = document.getElementById('gamesList');
             
             list.innerHTML = GAMES.map(g => `
-                <div class="game-card" onclick="openModal('game_${g.id}')">
-                    <div class="game-icon">
-                        <img src="${g.icon}" alt="${g.title}" loading="lazy">
-                    </div>
+                <div class="game-card" onclick="openGame('${g.id}')">
+                    <div class="game-icon">${g.icon}</div>
                     <div class="game-info">
                         <div class="title">${g.title}</div>
                         <div class="desc">${g.desc}</div>
-                        <div class="meta">
-                            <span>👥 ${g.players}</span>
-                            <span>🎯 ${g.prize}</span>
-                        </div>
                     </div>
                     <span class="game-status ${g.status === '🔥 Хайп' ? 'popular' : ''}">${g.status}</span>
                 </div>
@@ -865,71 +1023,321 @@
         }
         
         // ============================================================
-        //  МОДАЛКА
-        // ============================================================
-        
-        function openModal(type) {
-            const modal = document.getElementById('modal');
-            const icon = document.getElementById('modalIcon');
-            const title = document.getElementById('modalTitle');
-            const desc = document.getElementById('modalDesc');
-            
-            const messages = {
-                'deposit': { icon: '💰', title: 'Пополнение баланса', desc: 'Здесь вы сможете пополнить баланс звёздами через Telegram Stars или другие способы.' },
-                'withdraw': { icon: '💳', title: 'Вывод средств', desc: 'Вывод выигранных звёзд на ваш баланс в Telegram или другие платёжные системы.' },
-                'history': { icon: '📜', title: 'История игр', desc: 'Полный список всех сыгранных игр: дата, сумма ставки, результат и выигрыш.' },
-                'games': { icon: '🎮', title: 'Все игры', desc: 'Полный список доступных игр: Plinko, Coin Flip, Crash и другие.' },
-                'top': { icon: '🏆', title: 'Топ игроков', desc: 'Рейтинг самых успешных игроков по количеству побед и выигранных звёзд.' },
-                'gifts': { icon: '🎁', title: 'Мои подарки', desc: 'Коллекция подарков, полученных за достижения в играх и розыгрышах.' },
-                'profile': { icon: '👤', title: 'Профиль', desc: 'Настройки аккаунта, статистика игр, баланс и история транзакций.' },
-                'all': { icon: '📋', title: 'Все игры', desc: 'Полный список игр с фильтрацией по популярности, типу и размеру выигрыша.' },
-                'game_plinko': { icon: '🎲', title: 'Plinko', desc: 'Бросайте шарик и смотрите, в какую ячейку он попадёт. Чем выше риск — тем больше множитель!' },
-                'game_coinflip': { icon: '🪙', title: 'Coin Flip', desc: 'Классическая игра на удачу. Выберите орла или решку и удвойте свою ставку!' },
-                'game_crash': { icon: '📈', title: 'Crash', desc: 'Коэффициент растёт, пока вы не заберёте выигрыш. Заберите вовремя, чтобы не потерять всё!' }
-            };
-            
-            const data = messages[type] || messages['all'];
-            
-            // Если в data есть icon с URL картинки, используем img
-            if (data.icon && data.icon.startsWith('http')) {
-                icon.innerHTML = `<img src="${data.icon}" alt="icon">`;
-            } else {
-                icon.textContent = data.icon || '🎮';
-            }
-            
-            title.textContent = data.title;
-            desc.textContent = data.desc;
-            
-            modal.classList.add('show');
-            document.body.style.overflow = 'hidden';
-        }
-        
-        function closeModal() {
-            document.getElementById('modal').classList.remove('show');
-            document.body.style.overflow = '';
-        }
-        
-        document.getElementById('modal').addEventListener('click', function(e) {
-            if (e.target === this) closeModal();
-        });
-        
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeModal();
-        });
-        
-        // ============================================================
         //  НАВИГАЦИЯ
         // ============================================================
         
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', function() {
-                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-                this.classList.add('active');
+        function setupNavigation() {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    showPage('home');
+                });
             });
-        });
+        }
+        
+        function showPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(`page-${page}`).classList.add('active');
+        }
+        
+        function goHome() {
+            showPage('home');
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.querySelector('.nav-item[data-page="home"]').classList.add('active');
+        }
         
         // ============================================================
-        //  ЭМУЛЯЦИЯ ЖИВЫХ ДАННЫХ
+        //  ОТКРЫТИЕ ИГРЫ
+        // ============================================================
+        
+        function openGame(gameId) {
+            const game = GAMES.find(g => g.id === gameId);
+            if (!game) return;
+            
+            document.getElementById('gameTitle').textContent = game.title;
+            document.getElementById('gameSubtitle').textContent = game.desc;
+            
+            const content = document.getElementById('gameContent');
+            
+            switch(gameId) {
+                case 'plinko':
+                    content.innerHTML = renderPlinko();
+                    break;
+                case 'coinflip':
+                    content.innerHTML = renderCoinFlip();
+                    break;
+                case 'crash':
+                    content.innerHTML = renderCrash();
+                    break;
+            }
+            
+            showPage('game');
+        }
+        
+        // ============================================================
+        //  ИГРА: PLINKO
+        // ============================================================
+        
+        function renderPlinko() {
+            return `
+                <div style="margin-bottom:12px;">
+                    <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:4px;max-width:280px;margin:0 auto;">
+                        ${Array(8).fill(0).map((_, i) => 
+                            `<div style="background:rgba(255,255,255,0.05);border-radius:4px;padding:8px 0;font-size:11px;color:rgba(255,255,255,0.3);">
+                                ${[0.5,1,2,5,10,5,2,1][i]}x
+                            </div>`
+                        ).join('')}
+                    </div>
+                    <div style="margin:12px 0;font-size:48px;" id="plinkoResult">🎯</div>
+                </div>
+                <div class="bet-controls">
+                    <input type="number" id="plinkoBet" placeholder="Ставка" value="10" min="1">
+                    <button onclick="playPlinko()">Бросить</button>
+                </div>
+                <div class="quick-bets">
+                    ${[10, 25, 50, 100].map(v => 
+                        `<button onclick="document.getElementById('plinkoBet').value='${v}'">${v}⭐</button>`
+                    ).join('')}
+                </div>
+                <div class="game-history" id="plinkoHistory"></div>
+            `;
+        }
+        
+        function playPlinko() {
+            const bet = parseInt(document.getElementById('plinkoBet').value) || 10;
+            if (bet > balance) {
+                alert('❌ Недостаточно звёзд!');
+                return;
+            }
+            
+            const multipliers = [0.5, 1, 2, 5, 10, 5, 2, 1];
+            const index = Math.floor(Math.random() * multipliers.length);
+            const multiplier = multipliers[index];
+            const win = bet * multiplier;
+            
+            balance -= bet;
+            totalGames++;
+            
+            const result = document.getElementById('plinkoResult');
+            const history = document.getElementById('plinkoHistory');
+            
+            if (win > bet) {
+                balance += win;
+                wins++;
+                result.textContent = `🎉 +${win}⭐`;
+                result.className = 'result-display win';
+                history.innerHTML += `<span class="win">+${win}</span>`;
+            } else {
+                result.textContent = `😔 -${bet}⭐`;
+                result.className = 'result-display lose';
+                history.innerHTML += `<span class="lose">-${bet}</span>`;
+            }
+            
+            updateUI();
+            
+            if (history.children.length > 20) {
+                history.removeChild(history.firstChild);
+            }
+        }
+        
+        // ============================================================
+        //  ИГРА: COIN FLIP
+        // ============================================================
+        
+        function renderCoinFlip() {
+            return `
+                <div style="margin-bottom:12px;">
+                    <div style="font-size:72px;margin:10px 0;" id="coinResult">🪙</div>
+                    <div style="display:flex;gap:12px;justify-content:center;">
+                        <button onclick="coinFlip('heads')" style="padding:10px 24px;border-radius:14px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.03);color:#fff;cursor:pointer;font-size:16px;">🦅 Орёл</button>
+                        <button onclick="coinFlip('tails')" style="padding:10px 24px;border-radius:14px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.03);color:#fff;cursor:pointer;font-size:16px;">🪙 Решка</button>
+                    </div>
+                </div>
+                <div class="bet-controls">
+                    <input type="number" id="coinBet" placeholder="Ставка" value="10" min="1">
+                    <button onclick="coinFlip('random')">Кинуть</button>
+                </div>
+                <div class="quick-bets">
+                    ${[10, 25, 50, 100].map(v => 
+                        `<button onclick="document.getElementById('coinBet').value='${v}'">${v}⭐</button>`
+                    ).join('')}
+                </div>
+                <div class="game-history" id="coinHistory"></div>
+            `;
+        }
+        
+        function coinFlip(choice) {
+            const bet = parseInt(document.getElementById('coinBet').value) || 10;
+            if (bet > balance) {
+                alert('❌ Недостаточно звёзд!');
+                return;
+            }
+            
+            const result = Math.random() < 0.5 ? 'heads' : 'tails';
+            const win = result === choice || choice === 'random';
+            
+            balance -= bet;
+            totalGames++;
+            
+            const display = document.getElementById('coinResult');
+            const history = document.getElementById('coinHistory');
+            
+            if (win) {
+                const winAmount = bet * 2;
+                balance += winAmount;
+                wins++;
+                display.textContent = result === 'heads' ? '🦅' : '🪙';
+                display.className = 'result-display win';
+                history.innerHTML += `<span class="win">+${winAmount}</span>`;
+            } else {
+                display.textContent = result === 'heads' ? '🦅' : '🪙';
+                display.className = 'result-display lose';
+                history.innerHTML += `<span class="lose">-${bet}</span>`;
+            }
+            
+            updateUI();
+            
+            if (history.children.length > 20) {
+                history.removeChild(history.firstChild);
+            }
+        }
+        
+        // ============================================================
+        //  ИГРА: CRASH
+        // ============================================================
+        
+        let crashRunning = false;
+        let crashMultiplier = 1;
+        let crashInterval = null;
+        
+        function renderCrash() {
+            return `
+                <div style="margin-bottom:12px;">
+                    <div style="font-size:48px;font-weight:700;margin:10px 0;" id="crashMultiplier">1.00x</div>
+                    <div style="font-size:14px;color:rgba(255,255,255,0.4);" id="crashStatus">Нажмите "Забрать" для выигрыша</div>
+                </div>
+                <div class="bet-controls">
+                    <input type="number" id="crashBet" placeholder="Ставка" value="10" min="1">
+                    <button id="crashBtn" onclick="crashAction()">🚀 Забрать</button>
+                </div>
+                <div class="quick-bets">
+                    ${[10, 25, 50, 100].map(v => 
+                        `<button onclick="document.getElementById('crashBet').value='${v}'">${v}⭐</button>`
+                    ).join('')}
+                </div>
+                <div style="margin-top:8px;">
+                    <button onclick="startCrash()" style="padding:8px 20px;border-radius:14px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.03);color:#fff;cursor:pointer;font-size:13px;">🔄 Начать раунд</button>
+                </div>
+                <div class="game-history" id="crashHistory"></div>
+            `;
+        }
+        
+        function startCrash() {
+            if (crashRunning) return;
+            
+            const bet = parseInt(document.getElementById('crashBet').value) || 10;
+            if (bet > balance) {
+                alert('❌ Недостаточно звёзд!');
+                return;
+            }
+            
+            balance -= bet;
+            totalGames++;
+            crashRunning = true;
+            crashMultiplier = 1;
+            
+            document.getElementById('crashMultiplier').textContent = '1.00x';
+            document.getElementById('crashStatus').textContent = '⚡ Растёт...';
+            document.getElementById('crashBtn').disabled = false;
+            document.getElementById('crashBtn').textContent = '💎 Забрать';
+            
+            const maxMultiplier = 1 + Math.random() * 9;
+            let current = 1;
+            const step = 0.01 + Math.random() * 0.03;
+            
+            if (crashInterval) clearInterval(crashInterval);
+            
+            crashInterval = setInterval(() => {
+                current += step;
+                crashMultiplier = Math.round(current * 100) / 100;
+                document.getElementById('crashMultiplier').textContent = crashMultiplier.toFixed(2) + 'x';
+                
+                if (crashMultiplier >= maxMultiplier) {
+                    crash();
+                }
+            }, 100);
+        }
+        
+        function crashAction() {
+            if (!crashRunning) return;
+            crash();
+        }
+        
+        function crash() {
+            if (crashInterval) {
+                clearInterval(crashInterval);
+                crashInterval = null;
+            }
+            
+            crashRunning = false;
+            const bet = parseInt(document.getElementById('crashBet').value) || 10;
+            const winAmount = Math.floor(bet * crashMultiplier);
+            
+            document.getElementById('crashStatus').textContent = '💥 Краш!';
+            document.getElementById('crashBtn').disabled = true;
+            document.getElementById('crashBtn').textContent = '❌ Закончено';
+            
+            if (winAmount > bet) {
+                balance += winAmount;
+                wins++;
+                document.getElementById('crashMultiplier').className = 'result-display win';
+                document.getElementById('crashHistory').innerHTML += 
+                    `<span class="win">+${winAmount}</span>`;
+            } else {
+                document.getElementById('crashMultiplier').className = 'result-display lose';
+                document.getElementById('crashHistory').innerHTML += 
+                    `<span class="lose">-${bet}</span>`;
+            }
+            
+            updateUI();
+            
+            const history = document.getElementById('crashHistory');
+            if (history.children.length > 20) {
+                history.removeChild(history.firstChild);
+            }
+        }
+        
+        // ============================================================
+        //  БАЛАНС И UI
+        // ============================================================
+        
+        function addBalance(amount) {
+            balance += amount;
+            updateUI();
+        }
+        
+        function resetBalance() {
+            if (confirm('Сбросить баланс до 1000⭐?')) {
+                balance = 1000;
+                totalGames = 0;
+                wins = 0;
+                updateUI();
+            }
+        }
+        
+        function showBalance() {
+            alert(`💰 Баланс: ${balance}⭐\n🏆 Побед: ${wins}\n🎮 Сыграно: ${totalGames}`);
+        }
+        
+        function updateUI() {
+            document.getElementById('userBalance').textContent = balance;
+            document.getElementById('winsCount').textContent = wins;
+            document.getElementById('totalGames').textContent = totalGames;
+        }
+        
+        // ============================================================
+        //  ЭМУЛЯЦИЯ ОНЛАЙНА
         // ============================================================
         
         setInterval(() => {
@@ -939,21 +1347,8 @@
             onlineEl.textContent = Math.max(100, current + change).toLocaleString();
         }, 4000);
         
-        setInterval(() => {
-            const totalEl = document.getElementById('totalGames');
-            const current = parseInt(totalEl.textContent.replace(/,/g, ''));
-            totalEl.textContent = (current + Math.floor(Math.random() * 10) + 1).toLocaleString();
-        }, 5000);
-        
-        // ============================================================
-        //  ЗАПУСК
-        // ============================================================
-        
-        renderGames();
-        console.log('🎮 GiftArcade 2026 демо-версия запущена!');
-        console.log('🕹️ Доступно игр:', GAMES.length);
-        console.log('💰 Баланс: 1 250⭐');
+        console.log('🎮 GiftArcade с авторизацией и играми запущен!');
     </script>
 
 </body>
-</html> 
+</html>
