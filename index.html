@@ -54,12 +54,17 @@
             </div>
         </div>
 
-        <!-- СТРАНИЦА: ГЛАВНАЯ -->
+        <!-- ===== СТРАНИЦА: ГЛАВНАЯ ===== -->
         <div class="page active" id="page-home">
+            <div style="text-align:center;padding:12px 0 8px 0;">
+                <div style="font-size:28px;font-weight:700;" id="welcomeName">Добро пожаловать!</div>
+                <div style="font-size:14px;color:var(--text-secondary);margin-top:4px;">Играй и выигрывай звёзды</div>
+            </div>
+
             <div class="profile-card" onclick="App.showPage('profile')">
                 <div class="profile-avatar" id="userAvatar">👤</div>
                 <div class="profile-info">
-                    <div class="name"><span id="userName">Игрок</span><span class="edit-icon">✏️</span></div>
+                    <div class="name"><span id="userName">Игрок</span></div>
                     <div class="sub" id="userSub">🟢 В сети</div>
                     <div class="stats">
                         <span class="stats-item">🏆 <strong id="winsCount">0</strong></span>
@@ -81,20 +86,46 @@
                 <button class="action-btn secondary full" onclick="App.resetBalance()">🔄 Сброс</button>
             </div>
 
-            <div class="section-title"><span>🎮 Игры</span></div>
-            <div class="games-list" id="gamesList"></div>
-
-            <div class="achievements-section" style="margin-top:12px;">
+            <div class="achievements-section">
                 <div class="section-title"><span>🏆 Достижения</span><span class="see-all" id="achieveCount">0/6</span></div>
                 <div class="achievements-scroll" id="achievementsList"></div>
             </div>
         </div>
 
-        <!-- СТРАНИЦА: НАСТРОЙКИ -->
+        <!-- ===== СТРАНИЦА: МАГАЗИН ===== -->
+        <div class="page" id="page-shop">
+            <div style="padding:8px 0 12px 0;">
+                <div style="font-size:22px;font-weight:700;">🛒 Магазин</div>
+                <div style="font-size:13px;color:var(--text-secondary);">Пополни баланс и купи бонусы</div>
+            </div>
+
+            <!-- Вкладки магазина -->
+            <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px;">
+                <button class="shop-tab active" data-tab="stars" onclick="App.switchShopTab('stars')">⭐ Звёзды</button>
+                <button class="shop-tab" data-tab="bonus" onclick="App.switchShopTab('bonus')">🎁 Бонусы</button>
+                <button class="shop-tab" data-tab="badges" onclick="App.switchShopTab('badges')">🏅 Бейджи</button>
+                <button class="shop-tab" data-tab="premium" onclick="App.switchShopTab('premium')">👑 Премиум</button>
+            </div>
+
+            <!-- Товары -->
+            <div class="shop-grid" id="shopGrid">
+                <!-- Генерируется JS -->
+            </div>
+        </div>
+
+        <!-- ===== СТРАНИЦА: ИГРЫ ===== -->
+        <div class="page" id="page-games">
+            <div style="padding:8px 0 12px 0;">
+                <div style="font-size:22px;font-weight:700;">🎮 Игры</div>
+                <div style="font-size:13px;color:var(--text-secondary);">Выбери игру и начни выигрывать!</div>
+            </div>
+            <div class="games-list" id="gamesList"></div>
+        </div>
+
+        <!-- ===== СТРАНИЦА: ПРОФИЛЬ ===== -->
         <div class="page" id="page-profile">
-            <div style="display:flex;align-items:center;gap:10px;margin:4px 0 16px 0;flex-wrap:wrap;">
-                <button class="back-btn" onclick="App.showPage('home')">← Назад</button>
-                <span style="font-size:18px;font-weight:700;">Настройки</span>
+            <div style="padding:8px 0 12px 0;">
+                <div style="font-size:22px;font-weight:700;">⚙️ Настройки</div>
             </div>
 
             <div class="settings-group">
@@ -124,7 +155,7 @@
             <div class="settings-group">
                 <div class="group-title">ℹ️ О приложении</div>
                 <div class="settings-item">
-                    <div class="left"><span class="icon">📱</span><div class="info"><div class="title">Версия</div><div class="desc">GiftArcade v2.3</div></div></div>
+                    <div class="left"><span class="icon">📱</span><div class="info"><div class="title">Версия</div><div class="desc">GiftArcade v2.4</div></div></div>
                     <div class="right">2026</div>
                 </div>
                 <div class="settings-item" onclick="App.showAbout()">
@@ -134,18 +165,30 @@
             </div>
         </div>
 
-        <!-- СТРАНИЦА: ИГРА -->
+        <!-- ===== СТРАНИЦА: ИГРА ===== -->
         <div class="page" id="page-game">
             <button class="back-btn" onclick="App.goHome()" style="margin-bottom:12px;">← Назад</button>
             <div id="gameContent"></div>
         </div>
 
-        <!-- BOTTOM NAV -->
+        <!-- ===== BOTTOM NAV ===== -->
         <div class="bottom-nav">
-            <button class="nav-item active" data-page="home"><span class="nav-icon">🏠</span>Главная</button>
-            <button class="nav-item" data-page="home"><span class="nav-icon">🎮</span>Игры</button>
-            <button class="nav-item" data-page="profile"><span class="nav-icon">⚙️</span>Настройки</button>
-            <button class="nav-item" data-page="home"><span class="nav-icon">👤</span>Профиль</button>
+            <button class="nav-item active" data-page="home">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Главная</span>
+            </button>
+            <button class="nav-item" data-page="shop">
+                <span class="nav-icon">🛒</span>
+                <span class="nav-label">Магазин</span>
+            </button>
+            <button class="nav-item" data-page="games">
+                <span class="nav-icon">🎮</span>
+                <span class="nav-label">Игры</span>
+            </button>
+            <button class="nav-item" data-page="profile">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">Профиль</span>
+            </button>
         </div>
     </div>
 
