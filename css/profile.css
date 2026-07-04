@@ -1,3 +1,7 @@
+/* ============================================================
+   ПРОФИЛЬ И НАСТРОЙКИ (profile.css)
+   ============================================================ */
+
 /* ---------- ПРОФИЛЬ ---------- */
 .profile-card {
     margin: 12px 0 16px 0;
@@ -13,6 +17,7 @@
     position: relative;
     overflow: hidden;
     backdrop-filter: blur(10px);
+    animation: fadeInUp 0.5s ease forwards;
 }
 .profile-card::before {
     content: '';
@@ -25,14 +30,14 @@
 .profile-card:hover::before { opacity: 1; }
 .profile-card:hover {
     border-color: rgba(255,107,107,0.15);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-glow);
 }
 .profile-card:active { transform: scale(0.98); }
 
 .profile-avatar {
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
     background: var(--gradient);
     display: flex;
@@ -40,12 +45,13 @@
     justify-content: center;
     flex-shrink: 0;
     box-shadow: var(--glow);
-    font-size: 24px;
+    font-size: 26px;
     overflow: hidden;
     position: relative;
     z-index: 1;
 }
 .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.profile-avatar .lucide { width: 28px; height: 28px; color: #fff; }
 
 .profile-info {
     flex: 1;
@@ -54,7 +60,7 @@
     z-index: 1;
 }
 .profile-info .name {
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 600;
     display: flex;
     align-items: center;
@@ -66,6 +72,7 @@
     transition: var(--transition);
 }
 .profile-info .name .edit-icon:hover { opacity: 0.8; }
+
 .profile-info .sub {
     font-size: 12px;
     color: var(--text-secondary);
@@ -79,17 +86,32 @@
 .profile-info .stats-item {
     font-size: 12px;
     color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 .profile-info .stats-item strong {
     color: var(--text-primary);
     font-weight: 600;
 }
+.profile-info .stats-item .lucide {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
 .profile-badge {
     font-size: 32px;
-    animation: pulse 2s infinite;
+    animation: badgePulse 2s ease-in-out infinite;
     flex-shrink: 0;
     position: relative;
     z-index: 1;
+    filter: drop-shadow(0 0 10px rgba(255,215,0,0.2));
+}
+@keyframes badgePulse {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    50% { transform: scale(1.1) rotate(5deg); }
 }
 
 /* ---------- СТАТИСТИКА ---------- */
@@ -107,19 +129,29 @@
     border: 1px solid var(--border-color);
     transition: var(--transition);
     backdrop-filter: blur(10px);
+    animation: fadeInUp 0.5s ease forwards;
 }
+.stat-box:nth-child(1) { animation-delay: 0.05s; }
+.stat-box:nth-child(2) { animation-delay: 0.1s; }
+.stat-box:nth-child(3) { animation-delay: 0.15s; }
+
 .stat-box:hover {
     background: var(--bg-card-hover);
     border-color: rgba(255,107,107,0.08);
+    transform: translateY(-3px);
 }
 .stat-box:active { transform: scale(0.96); }
+
 .stat-box .number {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 700;
     background: var(--gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    transition: var(--transition);
 }
+.stat-box:hover .number { transform: scale(1.05); }
+
 .stat-box .label {
     font-size: 10px;
     color: var(--text-secondary);
@@ -152,6 +184,7 @@
     overflow: hidden;
 }
 .action-btn:active { transform: scale(0.95); }
+
 .action-btn.primary {
     background: var(--gradient);
     color: #fff;
@@ -170,6 +203,7 @@
     transform: translateY(-2px);
     box-shadow: var(--glow-strong);
 }
+
 .action-btn.secondary {
     background: var(--bg-card);
     color: var(--text-primary);
@@ -182,27 +216,16 @@
 }
 .action-btn.full { grid-column: 1 / -1; }
 
-/* ---------- ДОСТИЖЕНИЯ ---------- */
-.section-title {
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.action-btn .lucide {
+    width: 18px;
+    height: 18px;
 }
-.section-title .see-all {
-    font-size: 12px;
-    background: var(--gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    cursor: pointer;
-    font-weight: 500;
-    opacity: 0.7;
-    transition: var(--transition);
-}
-.section-title .see-all:hover { opacity: 1; }
 
+/* ---------- ДОСТИЖЕНИЯ ---------- */
+.achievements-section {
+    animation: fadeInUp 0.5s ease forwards;
+    animation-delay: 0.2s;
+}
 .achievements-scroll {
     display: flex;
     gap: 10px;
@@ -228,7 +251,14 @@
     border-color: rgba(255,107,107,0.1);
     box-shadow: var(--shadow);
 }
-.achievement-item .icon { font-size: 26px; display: block; }
+.achievement-item .icon { 
+    font-size: 26px; 
+    display: block;
+    transition: var(--transition);
+}
+.achievement-item:hover .icon {
+    transform: scale(1.2) rotate(-10deg);
+}
 .achievement-item .name {
     font-size: 9px;
     color: var(--text-secondary);
@@ -264,6 +294,7 @@
     letter-spacing: 0.5px;
     margin-bottom: 6px;
 }
+
 .settings-item {
     display: flex;
     justify-content: space-between;
@@ -277,19 +308,38 @@
     cursor: pointer;
     min-height: 50px;
     backdrop-filter: blur(10px);
+    animation: slideIn 0.4s ease forwards;
+    opacity: 0;
 }
+.settings-item:nth-child(1) { animation-delay: 0.05s; }
+.settings-item:nth-child(2) { animation-delay: 0.1s; }
+.settings-item:nth-child(3) { animation-delay: 0.15s; }
+.settings-item:nth-child(4) { animation-delay: 0.2s; }
+.settings-item:nth-child(5) { animation-delay: 0.25s; }
+
 .settings-item:hover {
     background: var(--bg-card-hover);
     border-color: rgba(255,107,107,0.08);
 }
 .settings-item:active { transform: scale(0.98); }
+
 .settings-item .left {
     display: flex;
     align-items: center;
     gap: 12px;
     min-width: 0;
 }
-.settings-item .left .icon { font-size: 20px; flex-shrink: 0; }
+.settings-item .left .icon { 
+    font-size: 20px; 
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.settings-item .left .icon .lucide {
+    width: 20px;
+    height: 20px;
+}
 .settings-item .left .info .title {
     font-size: 14px;
     font-weight: 500;
@@ -304,6 +354,7 @@
     flex-shrink: 0;
     margin-left: 8px;
 }
+
 .back-btn {
     padding: 10px 18px;
     border-radius: var(--radius);
@@ -417,6 +468,12 @@
     box-shadow: var(--glow);
 }
 .shop-tab:active { transform: scale(0.95); }
+.shop-tab .lucide {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    vertical-align: middle;
+}
 
 .shop-grid {
     display: flex;
@@ -436,7 +493,16 @@
     transition: var(--transition);
     cursor: pointer;
     backdrop-filter: blur(10px);
+    animation: slideIn 0.4s ease forwards;
+    opacity: 0;
 }
+.shop-item:nth-child(1) { animation-delay: 0.05s; }
+.shop-item:nth-child(2) { animation-delay: 0.1s; }
+.shop-item:nth-child(3) { animation-delay: 0.15s; }
+.shop-item:nth-child(4) { animation-delay: 0.2s; }
+.shop-item:nth-child(5) { animation-delay: 0.25s; }
+.shop-item:nth-child(6) { animation-delay: 0.3s; }
+
 .shop-item:hover {
     background: var(--bg-card-hover);
     border-color: rgba(255,107,107,0.1);
@@ -444,12 +510,21 @@
 }
 .shop-item:active { transform: scale(0.98); }
 
-.shop-item .shop-icon {
-    font-size: 32px;
-    width: 48px;
-    text-align: center;
+.shop-item .shop-icon { 
+    font-size: 32px; 
+    width: 48px; 
+    text-align: center; 
     flex-shrink: 0;
 }
+.shop-item .shop-icon .lucide {
+    width: 32px;
+    height: 32px;
+    color: #ffd93d;
+}
+.shop-item:hover .shop-icon .lucide {
+    transform: rotate(-10deg) scale(1.1);
+}
+
 .shop-item .shop-info { flex: 1; }
 .shop-item .shop-info .shop-title {
     font-size: 15px;
@@ -465,6 +540,7 @@
     font-weight: 600;
     margin-top: 2px;
 }
+
 .shop-item .shop-btn {
     padding: 8px 20px;
     border-radius: 12px;
@@ -482,105 +558,7 @@
     opacity: 0.4;
     cursor: not-allowed;
 }
-.shop-item .shop-tag {
-    font-size: 10px;
-    padding: 2px 12px;
-    border-radius: 100px;
-    background: rgba(255,107,107,0.15);
-    color: #ff6b6b;
-    font-weight: 600;
-}
-.shop-item .shop-tag.hot {
-    background: rgba(255,107,107,0.2);
-    color: #ff6b6b;
-    animation: pulse 1.5s infinite;
-}
-.shop-item .shop-tag.sale {
-    background: rgba(78,205,196,0.15);
-    color: #4ecdc4;
-}
-/* ============================================================
-   УЛУЧШЕННЫЙ ВИЗУАЛ
-   ============================================================ */
 
-/* ---------- БЕЙДЖИ В ПРОФИЛЕ ---------- */
-.profile-badge {
-    font-size: 32px;
-    animation: badgePulse 2s ease-in-out infinite;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 1;
-    filter: drop-shadow(0 0 10px rgba(255,215,0,0.2));
-}
-
-@keyframes badgePulse {
-    0%, 100% { transform: scale(1) rotate(0deg); }
-    50% { transform: scale(1.1) rotate(5deg); }
-}
-
-/* ---------- АНИМАЦИЯ ДЛЯ КАРТОЧЕК ---------- */
-.profile-card {
-    animation: cardAppear 0.5s ease forwards;
-}
-
-@keyframes cardAppear {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.settings-item {
-    animation: itemAppear 0.4s ease forwards;
-    opacity: 0;
-}
-
-.settings-item:nth-child(1) { animation-delay: 0.05s; }
-.settings-item:nth-child(2) { animation-delay: 0.1s; }
-.settings-item:nth-child(3) { animation-delay: 0.15s; }
-.settings-item:nth-child(4) { animation-delay: 0.2s; }
-.settings-item:nth-child(5) { animation-delay: 0.25s; }
-
-@keyframes itemAppear {
-    from {
-        opacity: 0;
-        transform: translateX(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-/* ---------- МАГАЗИН - КАРТОЧКИ ТОВАРОВ ---------- */
-.shop-item {
-    animation: shopItemAppear 0.4s ease forwards;
-    opacity: 0;
-}
-
-.shop-item:nth-child(1) { animation-delay: 0.05s; }
-.shop-item:nth-child(2) { animation-delay: 0.1s; }
-.shop-item:nth-child(3) { animation-delay: 0.15s; }
-.shop-item:nth-child(4) { animation-delay: 0.2s; }
-.shop-item:nth-child(5) { animation-delay: 0.25s; }
-.shop-item:nth-child(6) { animation-delay: 0.3s; }
-
-@keyframes shopItemAppear {
-    from {
-        opacity: 0;
-        transform: scale(0.95) translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-    }
-}
-
-/* ---------- БЕЙДЖИ В МАГАЗИНЕ ---------- */
 .shop-item .shop-tag {
     font-size: 10px;
     padding: 2px 12px;
@@ -590,52 +568,15 @@
     font-weight: 600;
     animation: tagPulse 2s ease-in-out infinite;
 }
-
 .shop-item .shop-tag.hot {
     background: rgba(255,107,107,0.2);
     color: #ff6b6b;
 }
-
 .shop-item .shop-tag.sale {
     background: rgba(78,205,196,0.15);
     color: #4ecdc4;
 }
-
 @keyframes tagPulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.6; }
-}
-
-/* ---------- СТАТИСТИКА - ЦИФРЫ ---------- */
-.stat-box .number {
-    transition: all 0.3s ease;
-}
-
-.stat-box:hover .number {
-    transform: scale(1.1);
-}
-
-/* ---------- ДОСТИЖЕНИЯ ---------- */
-.achievement-item {
-    transition: all 0.3s ease;
-}
-
-.achievement-item:hover {
-    transform: translateY(-4px);
-    border-color: rgba(255,107,107,0.15);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-}
-
-.achievement-item .icon {
-    transition: all 0.3s ease;
-}
-
-.achievement-item:hover .icon {
-    transform: scale(1.2) rotate(-10deg);
-}
-
-.achievement-item .progress-bar .fill {
-    background: var(--gradient);
-    border-radius: 4px;
-    transition: width 0.8s ease;
 }
