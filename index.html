@@ -14,6 +14,54 @@
     <link rel="stylesheet" href="css/responsive.css">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#07070d">
+    
+    <!-- Звуки -->
+    <script>
+        let audioCtx = null;
+        function playSound(type) {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                switch(type) {
+                    case 'win':
+                        osc.frequency.value = 880;
+                        osc.type = 'sine';
+                        gain.gain.value = 0.15;
+                        osc.start();
+                        setTimeout(() => { osc.frequency.value = 1100; }, 100);
+                        setTimeout(() => { osc.stop(); }, 300);
+                        break;
+                    case 'lose':
+                        osc.frequency.value = 440;
+                        osc.type = 'sawtooth';
+                        gain.gain.value = 0.08;
+                        osc.start();
+                        setTimeout(() => { osc.frequency.value = 330; }, 150);
+                        setTimeout(() => { osc.stop(); }, 300);
+                        break;
+                    case 'bonus':
+                        osc.frequency.value = 523;
+                        osc.type = 'sine';
+                        gain.gain.value = 0.12;
+                        osc.start();
+                        setTimeout(() => { osc.frequency.value = 659; }, 100);
+                        setTimeout(() => { osc.frequency.value = 784; }, 200);
+                        setTimeout(() => { osc.stop(); }, 350);
+                        break;
+                    case 'click':
+                        osc.frequency.value = 600;
+                        osc.type = 'sine';
+                        gain.gain.value = 0.05;
+                        osc.start();
+                        setTimeout(() => { osc.stop(); }, 50);
+                        break;
+                }
+            } catch(e) {}
+        }
+    </script>
 </head>
 <body>
 
@@ -26,9 +74,7 @@
             <button class="auth-btn" onclick="App.authViaTelegram()">
                 ✈️ Войти через Telegram
             </button>
-            <div style="margin-top:12px;font-size:12px;color:rgba(255,255,255,0.2);">
-                Демо-версия · Данные не сохраняются
-            </div>
+            <div class="footer-text">Демо-версия · Данные не сохраняются</div>
         </div>
     </div>
 
@@ -91,18 +137,17 @@
             </div>
 
             <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="number" id="totalGames">0</div>
-                    <div class="label">Игр</div>
-                </div>
-                <div class="stat-box">
-                    <div class="number" id="onlinePlayers">342</div>
-                    <div class="label">Онлайн</div>
-                </div>
-                <div class="stat-box">
-                    <div class="number" id="totalPrizes">5 231</div>
-                    <div class="label">Призов</div>
-                </div>
+                <div class="stat-box"><div class="number" id="totalGames">0</div><div class="label">Игр</div></div>
+                <div class="stat-box"><div class="number" id="onlinePlayers">342</div><div class="label">Онлайн</div></div>
+                <div class="stat-box"><div class="number" id="totalPrizes">5 231</div><div class="label">Призов</div></div>
+            </div>
+
+            <!-- Ежедневный бонус -->
+            <div style="margin-bottom:12px;">
+                <button class="action-btn btn-gold" onclick="App.getDailyBonus()" id="dailyBonusBtn" style="width:100%;">
+                    🎁 Ежедневный бонус
+                </button>
+                <div style="text-align:center;font-size:11px;color:var(--text-secondary);margin-top:4px;" id="bonusStatus">Нажми, чтобы получить 100⭐</div>
             </div>
 
             <div class="action-buttons">
@@ -135,7 +180,6 @@
                 <div style="font-size:13px;color:var(--text-secondary);">Пополни баланс и купи бонусы</div>
             </div>
 
-            <!-- Вкладки магазина -->
             <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px;">
                 <button class="shop-tab active" data-tab="stars" onclick="App.switchShopTab('stars')">
                     <i data-lucide="star" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i> Звёзды
@@ -151,6 +195,9 @@
                 </button>
                 <button class="shop-tab" data-tab="gifts" onclick="App.switchShopTab('gifts')">
                     <i data-lucide="gift" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i> Подарки
+                </button>
+                <button class="shop-tab" data-tab="cases" onclick="App.switchShopTab('cases')">
+                    <i data-lucide="package" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i> Кейсы
                 </button>
             </div>
 
