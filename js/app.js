@@ -1,5 +1,5 @@
 // ============================================================
-//  ГЛАВНОЕ ПРИЛОЖЕНИЕ (App) — TON ПОПОЛНЕНИЕ
+//  ГЛАВНОЕ ПРИЛОЖЕНИЕ (App) — TON ПОПОЛНЕНИЕ (ИСПРАВЛЕННОЕ)
 // ============================================================
 const App = {
     // СОСТОЯНИЕ
@@ -263,7 +263,7 @@ const App = {
             return;
         }
         
-        this.balance -= item.price;
+        this.balance = Math.round((this.balance - item.price) * 100) / 100;
         this.showNotification('🎉', 'Покупка успешна!', `${item.title} куплен`);
         playSound('bonus');
         this.updateUI();
@@ -289,12 +289,17 @@ const App = {
     },
     
     // ============================================================
-    //  TON ПОПОЛНЕНИЕ
+    //  TON ПОПОЛНЕНИЕ (ИСПРАВЛЕННОЕ)
     // ============================================================
     async connectWallet() {
         try {
             if (this.walletConnected) {
                 this.showNotification('ℹ️', 'Кошелёк уже подключён', this.walletAddress);
+                return;
+            }
+            
+            if (typeof TonConnect === 'undefined') {
+                this.showNotification('❌', 'TON Connect не загружен', 'Проверьте интернет-соединение');
                 return;
             }
             
@@ -329,6 +334,11 @@ const App = {
             return;
         }
         
+        if (!item) {
+            this.showNotification('❌', 'Ошибка', 'Выберите сумму для пополнения');
+            return;
+        }
+        
         this.showNotification('💎', 'Оплата TON', `Отправьте ${item.price} TON на адрес:`);
         this.showNotification('📋', 'Адрес', this.walletAddress);
         this.showNotification('⏳', 'Ожидание...', 'После оплаты баланс пополнится автоматически');
@@ -350,6 +360,7 @@ const App = {
                 this.updateUI();
                 this.renderShopItems(this.currentShopTab);
             } catch (error) {
+                console.error('Ошибка пополнения:', error);
                 this.showNotification('❌', 'Ошибка', 'Не удалось пополнить баланс');
             }
         }, 3000);
@@ -452,7 +463,7 @@ const App = {
             const isDeposit = tab === 'deposit';
             
             return `
-                <div class="shop-item" onclick="${isDeposit ? '' : `App.buyItem('${tab}', '${item.id}')`}">
+                <div class="shop-item">
                     ${iconHtml}
                     <div class="shop-info">
                         <div class="shop-title">${item.title}</div>
@@ -460,7 +471,7 @@ const App = {
                         <div class="shop-price">${item.price.toFixed(2)} TON</div>
                     </div>
                     ${item.tag ? `<span class="shop-tag hot">${item.tag}</span>` : ''}
-                    <button class="shop-btn" ${isDeposit && !App.walletConnected ? 'disabled' : ''} onclick="${isDeposit ? `App.depositTON(item)` : ''}">
+                    <button class="shop-btn" onclick="App.depositTON(item)" ${isDeposit && !App.walletConnected ? 'disabled' : ''}>
                         ${isDeposit ? (!App.walletConnected ? '🔒 Подключите кошелёк' : '💳 Пополнить') : 'Купить'}
                     </button>
                 </div>
@@ -613,6 +624,12 @@ const App = {
         renderAchievements(this);
         this.renderShopItems('bonus');
         this.updateUI();
+        
+        if (typeof TonConnect === 'undefined') {
+            console.warn('⚠️ TON Connect не загружен, проверьте интернет');
+        } else {
+            console.log('✅ TON Connect загружен');
+        }
         
         if (window.Telegram && window.Telegram.WebApp) {
             setTimeout(() => this.authViaTelegram(), 500);
