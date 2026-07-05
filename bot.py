@@ -28,9 +28,6 @@ def get_db_connection():
     conn = psycopg2.connect(DATABASE_URL)
     return conn
 
-# Временное хранилище инвойсов (в реальном проекте — БД)
-invoices = {}
-
 # ============================================================
 #  СОЗДАНИЕ ТАБЛИЦ
 # ============================================================
@@ -389,9 +386,14 @@ def check_invoice(invoice_id):
     if not invoice:
         return jsonify({'ok': False, 'error': 'Инвойс не найден'}), 404
     
-    # Имитация оплаты через 10 секунд (в реальном проекте — проверка блокчейна)
+    # Имитация оплаты через 10 секунд
     if not invoice['paid']:
         created_at = invoice['created_at']
+        
+        # Проверяем, что created_at — это datetime объект
+        if isinstance(created_at, str):
+            created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+        
         if (datetime.now() - created_at).total_seconds() > 10:
             # Помечаем как оплаченный
             conn = get_db_connection()
