@@ -1,5 +1,5 @@
 // ============================================================
-//  ГЛАВНОЕ ПРИЛОЖЕНИЕ (App) — КЕЙСЫ С КАРТИНКАМИ
+//  ГЛАВНОЕ ПРИЛОЖЕНИЕ (App) — NFT
 // ============================================================
 const App = {
     // СОСТОЯНИЕ
@@ -99,6 +99,46 @@ const App = {
                 price: 80, 
                 rewards: [25, 50, 100], 
                 tag: '🔥' 
+            }
+        ],
+        nft: [
+            { 
+                id: 'nft1', 
+                title: '🎨 Космический кот', 
+                desc: 'Редкий NFT-подарок', 
+                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417118.png',
+                price: 50,
+                tag: '🔥'
+            },
+            { 
+                id: 'nft2', 
+                title: '💎 Алмазный дракон', 
+                desc: 'Легендарный NFT-подарок', 
+                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417085.png',
+                price: 150,
+                tag: '🔥'
+            },
+            { 
+                id: 'nft3', 
+                title: '🌌 Галактика', 
+                desc: 'Уникальный NFT-подарок', 
+                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417074.png',
+                price: 80
+            },
+            { 
+                id: 'nft4', 
+                title: '🔥 Огненный феникс', 
+                desc: 'Эксклюзивный NFT-подарок', 
+                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417118.png',
+                price: 120,
+                tag: '🔥'
+            },
+            { 
+                id: 'nft5', 
+                title: '🌊 Водный дракон', 
+                desc: 'Уникальный NFT-подарок', 
+                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417085.png',
+                price: 60
             }
         ]
     },
@@ -224,6 +264,12 @@ const App = {
                         <img src="${item.icon}" alt="${item.title}" loading="lazy">
                     </div>
                 `;
+            } else if (tab === 'nft') {
+                iconHtml = `
+                    <div class="nft-preview">
+                        <img src="${item.icon}" alt="${item.title}" loading="lazy">
+                    </div>
+                `;
             } else {
                 iconHtml = `<div class="shop-icon">${item.icon}</div>`;
             }
@@ -238,7 +284,7 @@ const App = {
                     </div>
                     ${item.tag ? `<span class="shop-tag hot">${item.tag}</span>` : ''}
                     <button class="shop-btn" ${isOwned(item) ? 'disabled' : ''}>
-                        ${isOwned(item) ? '✅ Куплено' : tab === 'gifts' ? '📤 Отправить' : tab === 'cases' ? '🎲 Открыть' : 'Купить'}
+                        ${isOwned(item) ? '✅ Куплено' : tab === 'gifts' ? '📤 Отправить' : tab === 'cases' ? '🎲 Открыть' : tab === 'nft' ? '🎨 Купить NFT' : 'Купить'}
                     </button>
                 </div>
             `;
@@ -256,6 +302,12 @@ const App = {
         // Кейсы
         if (category === 'cases') {
             this.openCase(category, itemId);
+            return;
+        }
+        
+        // NFT
+        if (category === 'nft') {
+            this.buyNft(item);
             return;
         }
         
@@ -319,6 +371,26 @@ const App = {
         playSound('win');
         this.updateUI();
         this.renderShopItems(this.currentShopTab);
+    },
+    
+    // ============================================================
+    //  ПОКУПКА NFT
+    // ============================================================
+    buyNft(item) {
+        if (this.balance < item.price) {
+            this.showNotification('❌', 'Недостаточно звёзд', 'Пополните баланс');
+            return;
+        }
+        
+        // В демо-режиме просто списываем звёзды и показываем уведомление
+        this.balance -= item.price;
+        this.showNotification('🎨', 'NFT куплен!', `${item.title} добавлен в коллекцию`);
+        playSound('bonus');
+        this.updateUI();
+        this.renderShopItems(this.currentShopTab);
+        
+        // В реальном приложении здесь будет вызов Telegram API:
+        // await sendNft(this, item);
     },
     
     // ============================================================
@@ -589,11 +661,10 @@ const App = {
             });
         });
         
-        console.log('🎮 GiftArcade v2.5 — МАКСИМАЛЬНЫЙ ВИЗУАЛ!');
-        console.log('🛒 Категории: Звёзды, Бонусы, Бейджи, Премиум, Подарки, Кейсы');
+        console.log('🎮 GiftArcade v2.5 — NFT добавлены!');
+        console.log('🛒 Категории: Звёзды, Бонусы, Бейджи, Премиум, Подарки, Кейсы, NFT');
         console.log('🎁 Ежедневный бонус: 100⭐');
-        console.log('🎵 Звуки: Победа, Поражение, Бонус, Клик');
-        console.log('🎨 Иконки: Lucide SVG + картинки для игр');
+        console.log('🎨 NFT-подарки: 5 штук');
     }
 };
 
