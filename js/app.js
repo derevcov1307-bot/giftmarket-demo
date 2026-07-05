@@ -71,7 +71,7 @@ const App = {
             { id: 'g3', title: '🎂 Торт', desc: 'Сладкий подарок', icon: '🎂', price: 8 },
             { id: 'g4', title: '🎈 Воздушный шар', desc: 'Праздничный подарок', icon: '🎈', price: 3 },
             { id: 'g5', title: '⭐ Золотая звезда', desc: 'Особый подарок', icon: '⭐', price: 15 },
-            { id: 'g6', title: '🎁 Подарочная коробка', desc: 'Сюрприз внутри!', icon: '🎁', price: 20 },
+            { id: 'g6', title: '🎁 Подарочная коробка', desc: 'Сюрприз внутри!', icon: '🎁', price: 20 }
         ]
     },
     
@@ -147,15 +147,15 @@ const App = {
         let recipientInput = '';
         if (tab === 'gifts') {
             recipientInput = `
-                <div class="gift-recipient" style="margin-bottom:12px;padding:12px 16px;background:var(--bg-card);border-radius:var(--radius);border:1px solid var(--border-color);">
-                    <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:4px;">👤 Получатель (Telegram ID)</label>
-                    <input type="text" id="giftRecipient" placeholder="Введите Telegram ID" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-size:14px;outline:none;">
+                <div class="gift-recipient">
+                    <label>👤 Получатель (Telegram ID)</label>
+                    <input type="text" id="giftRecipient" placeholder="Введите Telegram ID получателя" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-size:14px;outline:none;">
                 </div>
             `;
         }
         
         grid.innerHTML = recipientInput + items.map(item => `
-            <div class="shop-item" onclick="App.buyItem('${tab}', '${item.id}')">
+            <div class="shop-item ${tab === 'gifts' ? 'gift-item' : ''}" onclick="App.buyItem('${tab}', '${item.id}')">
                 <div class="shop-icon">${item.icon}</div>
                 <div class="shop-info">
                     <div class="shop-title">${item.title}</div>
@@ -189,7 +189,7 @@ const App = {
                 this.showNotification('❌', 'Недостаточно звёзд', 'Пополните баланс в магазине');
                 return;
             }
-            // Отправляем подарок
+            // Отправляем подарок через бэкенд
             this.sendGift(item, recipient);
             return;
         }
@@ -219,23 +219,93 @@ const App = {
         }
     },
     
-    // Отправка подарка (демо-версия)
-    sendGift(item, recipient) {
+    // ============================================================
+    //  ОТПРАВКА ПОДАРКА ЧЕРЕЗ БЭКЕНД
+    // ============================================================
+    async sendGift(item, recipient) {
+        // Проверяем баланс
         if (this.balance < item.price) {
             this.showNotification('❌', 'Недостаточно звёзд', 'Пополните баланс');
             return;
         }
         
-        this.balance -= item.price;
-        this.gifts++;
-        this.showNotification('🎁', `Подарок отправлен!`, `${item.title} → пользователю ${recipient}`);
-        this.updateUI();
-        this.renderShopItems(this.currentShopTab);
+        // Получаем Telegram ID пользователя
+        const user_id = this.telegramUser?.id || 123456;
         
-        // В реальном приложении здесь будет вызов Telegram API:
-        // await bot.sendGift(recipient, itemId);
+        try {
+            // Отправляем запрос к бэкенду
+            const response = await fetch('http://localhost:5000/api/gifts/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: user_id,
+                    gift_id: item.id,
+                    recipient_id: parseInt(recipient),
+                    text: `🎁 Подарок от ${this.user.name}!`
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.ok) {
+                // Обновляем баланс
+                this.balance = data.new_balance;
+                this.gifts++;
+                this.showNotification('🎁', 'Подарок отправлен!', `Пользователю ${recipient}`);
+                this.updateUI();
+                this.renderShopItems(this.currentShopTab);
+            } else {
+                this.showNotification('❌', 'Ошибка', data.error || 'Не удалось отправить подарок');
+            }
+        } catch (error) {
+            console.error('Ошибка отправки подарка:', error);
+            // Демо-режим если бэкенд не доступен
+            if (this.balance >= item.price) {
+                this.balance -= item.price;
+                this.gifts++;
+                this.showNotification('🎁', 'Подарок отправлен (ДЕМО)', `Пользователю ${recipient}`);
+                this.updateUI();
+                this.renderShopItems(this.currentShopTab);
+            }
+        }
     },
     
+    // ============================================================
+    //  ПОЛУЧЕНИЕ ПОДАРКОВ ИЗ TELEGRAM
+    // ============================================================
+    async fetchTelegramGifts() {
+        try {
+            const response = await fetch('http://localhost:5000/api/gifts/available');
+            const data = await response.json();
+            
+            if (data.ok && data.gifts.length > 0) {
+                // Преобразуем подарки из Telegram в формат магазина
+                const telegramGifts = data.gifts.map(g => ({
+                    id: g.id,
+                    title: g.title || '🎁 Подарок',
+                    desc: `Осталось: ${g.remaining_count || 0} из ${g.total_count || 0}`,
+                    icon: g.title || '🎁',
+                    price: g.price || 10,
+                    tag: g.remaining_count < 10 ? '🔥' : ''
+                }));
+                
+                // Обновляем магазин
+                this.shopItems.gifts = telegramGifts;
+                this.renderShopItems(this.currentShopTab);
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.log('ℹ️ Бэкенд не доступен, используем демо-подарки');
+            return false;
+        }
+    },
+    
+    // ============================================================
+    //  ОБРАБОТКА ПОКУПКИ
+    // ============================================================
     processPurchase(category, itemId, item) {
         if (this.balance < item.price) {
             this.showNotification('❌', 'Недостаточно звёзд', 'Пополните баланс в магазине');
@@ -373,6 +443,11 @@ const App = {
             document.getElementById('authOverlay').classList.add('show');
         }
         
+        // Загружаем реальные подарки из Telegram
+        setTimeout(() => {
+            this.fetchTelegramGifts();
+        }, 1000);
+        
         if (typeof lucide !== 'undefined') {
             setTimeout(() => lucide.createIcons(), 200);
         }
@@ -407,9 +482,10 @@ const App = {
             });
         });
         
-        console.log('🎮 GiftArcade v2.5 — С подарками!');
+        console.log('🎮 GiftArcade v2.5 — С подарками через Telegram API!');
         console.log('🛒 Категории: Звёзды, Бонусы, Бейджи, Премиум, Подарки');
         console.log('🎨 Иконки: Lucide SVG + картинки для игр');
+        console.log('🔗 Бэкенд: http://localhost:5000');
     }
 };
 
