@@ -1,40 +1,569 @@
+/* ============================================================
+   АДАПТИВ (responsive.css) — МАКСИМАЛЬНЫЙ
+   ============================================================ */
+
+/* ---------- МАЛЕНЬКИЕ ТЕЛЕФОНЫ (до 380px) ---------- */
 @media (max-width: 380px) {
-    .profile-info .stats { gap: 8px; }
-    .profile-info .stats-item { font-size: 10px; }
-    .logo-text { font-size: 16px; }
-    .balance { font-size: 12px; padding: 4px 10px; }
-    .stat-box .number { font-size: 16px; }
-    .stat-box .label { font-size: 8px; }
-    .achievement-item { flex: 0 0 64px; padding: 8px 6px; }
-    .achievement-item .icon { font-size: 20px; }
-    .game-area { padding: 16px 12px; min-height: 140px; }
-    .bet-controls input { font-size: 13px; padding: 8px 10px; }
-    .bet-controls button { font-size: 12px; padding: 8px 14px; }
+    /* Топ-бар */
+    .top-bar {
+        padding: 12px 12px 10px 12px;
+    }
+    .logo-text {
+        font-size: 16px;
+    }
+    .logo-icon {
+        width: 34px;
+        height: 34px;
+        font-size: 16px;
+    }
+    .balance {
+        font-size: 12px;
+        padding: 4px 10px;
+    }
+    .theme-toggle {
+        width: 34px;
+        height: 34px;
+        font-size: 14px;
+    }
+    
+    /* Профиль */
+    .profile-card {
+        padding: 12px 14px;
+        gap: 10px;
+    }
+    .profile-avatar {
+        width: 44px;
+        height: 44px;
+        font-size: 22px;
+    }
+    .profile-info .name {
+        font-size: 15px;
+    }
+    .profile-info .sub {
+        font-size: 10px;
+    }
+    .profile-info .stats-item {
+        font-size: 10px;
+    }
+    .profile-badge {
+        font-size: 26px;
+    }
+    
+    /* Статистика */
+    .stat-box {
+        padding: 10px 6px;
+    }
+    .stat-box .number {
+        font-size: 18px;
+    }
+    .stat-box .label {
+        font-size: 8px;
+    }
+    
+    /* Кнопки */
+    .action-btn {
+        padding: 10px;
+        font-size: 12px;
+    }
+    .action-btn .lucide {
+        width: 16px;
+        height: 16px;
+    }
+    
+    /* Достижения */
+    .achievement-item {
+        flex: 0 0 64px;
+        padding: 8px 6px;
+    }
+    .achievement-item .icon {
+        font-size: 20px;
+    }
+    .achievement-item .name {
+        font-size: 8px;
+    }
+    
+    /* Игры */
+    .games-list .settings-item {
+        padding: 10px 12px;
+    }
+    .games-list .settings-item .left .info .title {
+        font-size: 13px;
+    }
+    .games-list .settings-item .left .info .desc {
+        font-size: 10px;
+    }
+    .game-icon-wrapper {
+        width: 40px;
+        height: 40px;
+    }
+    
+    /* Магазин */
+    .shop-item {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+    .shop-item .shop-icon {
+        font-size: 26px;
+        width: 40px;
+    }
+    .shop-item .shop-info .shop-title {
+        font-size: 13px;
+    }
+    .shop-item .shop-info .shop-desc {
+        font-size: 10px;
+    }
+    .shop-item .shop-btn {
+        padding: 6px 14px;
+        font-size: 11px;
+    }
+    .shop-tab {
+        padding: 6px 12px;
+        font-size: 11px;
+    }
+    
+    /* Настройки */
+    .settings-item {
+        padding: 10px 12px;
+        min-height: 44px;
+    }
+    .settings-item .left .info .title {
+        font-size: 12px;
+    }
+    .settings-item .left .info .desc {
+        font-size: 10px;
+    }
+    .settings-item .left .icon .lucide {
+        width: 18px;
+        height: 18px;
+    }
+    
+    /* Игровое поле */
+    .game-area {
+        padding: 16px 12px;
+        min-height: 140px;
+    }
+    .game-area .result-display {
+        font-size: 28px;
+    }
+    .game-area .game-emoji {
+        font-size: 40px;
+    }
+    .game-title {
+        font-size: 18px;
+    }
+    .game-subtitle {
+        font-size: 11px;
+    }
+    
+    /* Plinko */
+    .plinko-multipliers {
+        gap: 3px;
+    }
+    .plinko-multiplier {
+        font-size: 9px;
+        padding: 4px 0;
+    }
+    .plinko-controls {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    .plinko-bet-control input {
+        font-size: 14px;
+        padding: 6px 4px;
+    }
+    .plinko-bet-control button {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+    }
+    .plinko-risk {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 12px 14px;
+    }
+    .plinko-risk-btn {
+        font-size: 10px;
+        padding: 6px 10px;
+    }
+    .plinko-play-btn {
+        font-size: 14px;
+        padding: 12px;
+    }
+    
+    /* Coin Flip */
+    .coin {
+        width: 80px;
+        height: 80px;
+    }
+    .coin-front, .coin-back {
+        font-size: 36px;
+    }
+    .coin-btn {
+        padding: 8px 16px;
+        font-size: 12px;
+    }
+    .coin-btn-icon {
+        font-size: 16px;
+    }
+    
+    /* Crash */
+    #crashMultiplier {
+        font-size: 36px;
+    }
+    #crashCanvas {
+        max-height: 100px;
+    }
+    
+    /* Модалки */
+    .modal-content {
+        padding: 20px 16px;
+    }
+    .modal-content h3 {
+        font-size: 18px;
+    }
+    .modal-content .input-group input,
+    .modal-content .input-group select {
+        font-size: 13px;
+        padding: 10px 12px;
+    }
+    
+    /* Авторизация */
+    .auth-card {
+        padding: 28px 20px;
+    }
+    .auth-card .auth-icon {
+        font-size: 48px;
+    }
+    .auth-card h2 {
+        font-size: 22px;
+    }
+    .auth-card p {
+        font-size: 13px;
+    }
+    .auth-btn {
+        font-size: 14px;
+        padding: 14px;
+    }
+    
+    /* Навигация */
+    .bottom-nav {
+        padding: 4px 8px 12px 8px;
+    }
+    .nav-item .nav-icon {
+        font-size: 18px;
+    }
+    .nav-item .nav-label {
+        font-size: 8px;
+    }
 }
 
+/* ---------- СРЕДНИЕ ТЕЛЕФОНЫ (381-440px) ---------- */
+@media (min-width: 381px) and (max-width: 440px) {
+    .plinko-controls {
+        grid-template-columns: 1fr 1fr;
+    }
+    .plinko-risk {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    .coin {
+        width: 90px;
+        height: 90px;
+    }
+    .coin-front, .coin-back {
+        font-size: 42px;
+    }
+}
+
+/* ---------- БОЛЬШИЕ ЭКРАНЫ (планшеты, десктоп) ---------- */
 @media (min-width: 441px) {
     .app-container {
         height: auto;
         min-height: 80vh;
         max-height: 90vh;
     }
-    .page { padding: 0 20px 20px 20px; }
+    .page {
+        padding: 0 20px 20px 20px;
+    }
+    .game-area {
+        padding: 28px 20px;
+        min-height: 220px;
+    }
+    .game-title {
+        font-size: 26px;
+    }
+    .coin {
+        width: 110px;
+        height: 110px;
+    }
+    .coin-front, .coin-back {
+        font-size: 52px;
+    }
+    #crashCanvas {
+        max-height: 160px;
+    }
 }
 
+/* ---------- ЛАНДШАФТНАЯ ОРИЕНТАЦИЯ ---------- */
 @media (orientation: landscape) and (max-height: 500px) {
-    .profile-card { padding: 10px 14px; margin: 8px 0 12px 0; }
-    .profile-avatar { width: 36px; height: 36px; font-size: 18px; }
-    .profile-info .name { font-size: 13px; }
-    .stats-grid { margin-bottom: 10px; }
-    .stat-box { padding: 8px 6px; }
-    .stat-box .number { font-size: 15px; }
-    .action-buttons { margin-bottom: 10px; }
-    .action-btn { padding: 8px; font-size: 12px; }
-    .achievements-scroll { padding-bottom: 6px; }
-    .bottom-nav { padding: 4px 8px 8px 8px; }
-    .nav-item .nav-icon { font-size: 16px; }
-    .top-bar { padding: 10px 12px 8px 12px; }
-    .game-area { min-height: 120px; padding: 12px 10px; }
-    .game-area .result-display { font-size: 28px; }
-    .game-area .game-emoji { font-size: 36px; }
+    /* Общие */
+    .profile-card {
+        padding: 10px 14px;
+        margin: 8px 0 10px 0;
+    }
+    .profile-avatar {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+    }
+    .profile-info .name {
+        font-size: 13px;
+    }
+    .profile-info .stats-item {
+        font-size: 10px;
+    }
+    .profile-badge {
+        font-size: 24px;
+    }
+    
+    /* Статистика */
+    .stats-grid {
+        margin-bottom: 10px;
+    }
+    .stat-box {
+        padding: 8px 6px;
+    }
+    .stat-box .number {
+        font-size: 15px;
+    }
+    .stat-box .label {
+        font-size: 8px;
+    }
+    
+    /* Кнопки */
+    .action-buttons {
+        margin-bottom: 10px;
+    }
+    .action-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    
+    /* Игры */
+    .game-area {
+        min-height: 120px;
+        padding: 12px 10px;
+    }
+    .game-area .result-display {
+        font-size: 28px;
+    }
+    .game-area .game-emoji {
+        font-size: 36px;
+    }
+    .game-title {
+        font-size: 18px;
+    }
+    .game-subtitle {
+        font-size: 11px;
+        margin-bottom: 8px;
+    }
+    
+    /* Plinko */
+    .plinko-multipliers {
+        max-width: 280px;
+        margin-bottom: 8px;
+    }
+    .plinko-multiplier {
+        font-size: 10px;
+        padding: 4px 0;
+    }
+    .plinko-grid {
+        min-height: 100px;
+    }
+    .plinko-controls {
+        gap: 8px;
+        margin: 8px 0;
+    }
+    .plinko-control-group {
+        padding: 8px 10px;
+    }
+    .plinko-control-group label {
+        font-size: 9px;
+        margin-bottom: 2px;
+    }
+    .plinko-bet-control input {
+        font-size: 13px;
+        padding: 4px 4px;
+    }
+    .plinko-bet-control button {
+        width: 26px;
+        height: 26px;
+        font-size: 14px;
+    }
+    .plinko-risk {
+        padding: 8px 12px;
+        margin: 8px 0;
+    }
+    .plinko-risk > span {
+        font-size: 11px;
+    }
+    .plinko-risk-btn {
+        font-size: 10px;
+        padding: 4px 8px;
+    }
+    .plinko-play-btn {
+        font-size: 13px;
+        padding: 10px;
+    }
+    
+    /* Coin Flip */
+    .coin {
+        width: 70px;
+        height: 70px;
+    }
+    .coin-front, .coin-back {
+        font-size: 30px;
+    }
+    .coin-btn {
+        padding: 6px 14px;
+        font-size: 11px;
+    }
+    .coin-btn-icon {
+        font-size: 14px;
+    }
+    
+    /* Crash */
+    #crashMultiplier {
+        font-size: 30px;
+    }
+    #crashCanvas {
+        max-height: 80px;
+    }
+    
+    /* История */
+    .game-history {
+        max-height: 28px;
+        font-size: 10px;
+    }
+    .game-history span {
+        padding: 1px 6px;
+    }
+    
+    /* Навигация */
+    .top-bar {
+        padding: 8px 12px 6px 12px;
+    }
+    .logo-icon {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+    }
+    .logo-text {
+        font-size: 15px;
+    }
+    .balance {
+        font-size: 11px;
+        padding: 4px 10px;
+    }
+    .theme-toggle {
+        width: 30px;
+        height: 30px;
+        font-size: 13px;
+    }
+    .bottom-nav {
+        padding: 4px 8px 8px 8px;
+    }
+    .nav-item .nav-icon {
+        font-size: 16px;
+    }
+    .nav-item .nav-label {
+        font-size: 8px;
+    }
+    
+    /* Магазин */
+    .shop-item {
+        padding: 8px 10px;
+        gap: 8px;
+    }
+    .shop-item .shop-icon {
+        font-size: 22px;
+        width: 34px;
+    }
+    .shop-item .shop-info .shop-title {
+        font-size: 12px;
+    }
+    .shop-item .shop-info .shop-desc {
+        font-size: 10px;
+    }
+    .shop-item .shop-btn {
+        padding: 4px 12px;
+        font-size: 10px;
+    }
+    .shop-tab {
+        padding: 4px 10px;
+        font-size: 10px;
+    }
+    
+    /* Настройки */
+    .settings-item {
+        padding: 8px 12px;
+        min-height: 36px;
+    }
+    .settings-item .left .info .title {
+        font-size: 12px;
+    }
+    .settings-item .left .info .desc {
+        font-size: 10px;
+    }
+    .settings-item .left .icon .lucide {
+        width: 16px;
+        height: 16px;
+    }
+    .back-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+}
+
+/* ---------- ТЕМНЫЙ РЕЖИМ ДЛЯ ПЕЧАТИ ---------- */
+@media print {
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+    .app-container {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+    .bg-option {
+        display: none !important;
+    }
+    .bottom-nav {
+        display: none !important;
+    }
+    .top-bar {
+        border-bottom: 1px solid #ddd !important;
+    }
+}
+
+/* ---------- ПРЕДОТВРАЩЕНИЕ ZOOM НА INPUT ---------- */
+@media (max-width: 440px) {
+    input, select, textarea {
+        font-size: 16px !important;
+    }
+}
+
+/* ---------- ПОДДЕРЖКА SAFE AREA (iPhone X и новее) ---------- */
+@supports (padding: max(0px)) {
+    .app-container {
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+    }
+    .bottom-nav {
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
+    }
+    .top-bar {
+        padding-top: max(16px, env(safe-area-inset-top));
+    }
 }
