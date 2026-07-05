@@ -1,5 +1,5 @@
 // ============================================================
-//  ГЛАВНОЕ ПРИЛОЖЕНИЕ (App) — NFT + МАРКЕТ
+//  ГЛАВНОЕ ПРИЛОЖЕНИЕ (App) — TON + NFT + МАРКЕТ
 // ============================================================
 const App = {
     // СОСТОЯНИЕ
@@ -17,6 +17,8 @@ const App = {
     isPremium: false,
     boosters: { x2: 0, x3: 0 },
     currentFilter: 'all',
+    walletAddress: null,
+    walletConnected: false,
     
     // ИГРЫ
     games: [
@@ -109,7 +111,7 @@ const App = {
                 desc: 'Редкий NFT-подарок', 
                 icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417118.png',
                 price: 50,
-                tag: '🔥'
+                tag: '🔥' 
             },
             { 
                 id: 'nft2', 
@@ -117,7 +119,7 @@ const App = {
                 desc: 'Легендарный NFT-подарок', 
                 icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417085.png',
                 price: 150,
-                tag: '🔥'
+                tag: '🔥' 
             },
             { 
                 id: 'nft3', 
@@ -132,7 +134,7 @@ const App = {
                 desc: 'Эксклюзивный NFT-подарок', 
                 icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417118.png',
                 price: 120,
-                tag: '🔥'
+                tag: '🔥' 
             },
             { 
                 id: 'nft5', 
@@ -202,6 +204,38 @@ const App = {
                 model: 'Молниеносный тигр',
                 backdrop: 'Гроза',
                 number: '#0007'
+            }
+        ],
+        ton: [
+            { 
+                id: 'ton1', 
+                title: '💎 1 TON', 
+                desc: '1 TON = 100 ⭐', 
+                icon: '💎', 
+                price: 1,
+                tonAmount: 1,
+                starsAmount: 100,
+                tag: '🔥'
+            },
+            { 
+                id: 'ton2', 
+                title: '💎 5 TON', 
+                desc: '5 TON = 550 ⭐ (бонус 10%)', 
+                icon: '💎', 
+                price: 5,
+                tonAmount: 5,
+                starsAmount: 550,
+                tag: '🔥'
+            },
+            { 
+                id: 'ton3', 
+                title: '💎 10 TON', 
+                desc: '10 TON = 1200 ⭐ (бонус 20%)', 
+                icon: '💎', 
+                price: 10,
+                tonAmount: 10,
+                starsAmount: 1200,
+                tag: '🔥'
             }
         ]
     },
@@ -337,12 +371,16 @@ const App = {
                         <img src="${item.icon}" alt="${item.title}" loading="lazy">
                     </div>
                 `;
+            } else if (tab === 'ton') {
+                iconHtml = `<div class="shop-icon">💎</div>`;
             } else {
                 iconHtml = `<div class="shop-icon">${item.icon}</div>`;
             }
             
+            const isTon = tab === 'ton';
+            
             return `
-                <div class="shop-item ${tab === 'gifts' ? 'gift-item' : ''}" onclick="App.buyItem('${tab}', '${item.id}')">
+                <div class="shop-item ${tab === 'gifts' ? 'gift-item' : ''}" onclick="${isTon ? '' : `App.buyItem('${tab}', '${item.id}')`}">
                     ${iconHtml}
                     <div class="shop-info">
                         <div class="shop-title">${item.title}</div>
@@ -350,8 +388,8 @@ const App = {
                         <div class="shop-price">${item.price} ⭐</div>
                     </div>
                     ${item.tag ? `<span class="shop-tag hot">${item.tag}</span>` : ''}
-                    <button class="shop-btn" ${isOwned(item) ? 'disabled' : ''}>
-                        ${isOwned(item) ? '✅ Куплено' : tab === 'gifts' ? '📤 Отправить' : tab === 'cases' ? '🎲 Открыть' : tab === 'nft' ? '🎨 Купить NFT' : 'Купить'}
+                    <button class="shop-btn" ${isOwned(item) || (isTon && !App.walletConnected) ? 'disabled' : ''} onclick="${isTon ? `App.buyTon(item)` : ''}">
+                        ${isOwned(item) ? '✅ Куплено' : tab === 'gifts' ? '📤 Отправить' : tab === 'cases' ? '🎲 Открыть' : tab === 'nft' ? '🎨 Купить NFT' : isTon ? (!App.walletConnected ? '🔒 Подключите кошелёк' : '💳 Оплатить TON') : 'Купить'}
                     </button>
                 </div>
             `;
@@ -557,6 +595,89 @@ const App = {
         this.updateUI();
         this.renderMarket();
         this.renderNftCollection();
+    },
+    
+    // ============================================================
+    //  TON КОШЕЛЁК
+    // ============================================================
+    async connectWallet() {
+        try {
+            if (this.walletConnected) {
+                this.showNotification('ℹ️', 'Кошелёк уже подключён', this.walletAddress);
+                return;
+            }
+            
+            // В реальном приложении здесь будет TON Connect
+            const address = 'EQD' + Math.random().toString(36).substring(2, 10) + '...';
+            
+            this.walletAddress = address;
+            this.walletConnected = true;
+            
+            document.getElementById('walletStatus').textContent = '✅ Подключён';
+            document.getElementById('walletAddress').textContent = address.slice(0, 6) + '...' + address.slice(-4);
+            
+            this.showNotification('✅', 'Кошелёк подключён!', address.slice(0, 6) + '...' + address.slice(-4));
+            playSound('bonus');
+            
+            localStorage.setItem('walletAddress', address);
+            localStorage.setItem('walletConnected', 'true');
+            
+            this.renderShopItems(this.currentShopTab);
+            
+        } catch (error) {
+            console.error('Ошибка подключения кошелька:', error);
+            this.showNotification('❌', 'Ошибка подключения', 'Попробуйте позже');
+        }
+    },
+    
+    disconnectWallet() {
+        this.walletAddress = null;
+        this.walletConnected = false;
+        
+        document.getElementById('walletStatus').textContent = 'Не подключён';
+        document.getElementById('walletAddress').textContent = '→';
+        
+        localStorage.removeItem('walletAddress');
+        localStorage.removeItem('walletConnected');
+        
+        this.showNotification('ℹ️', 'Кошелёк отключён', '');
+        this.renderShopItems(this.currentShopTab);
+    },
+    
+    loadWallet() {
+        const address = localStorage.getItem('walletAddress');
+        const connected = localStorage.getItem('walletConnected') === 'true';
+        
+        if (address && connected) {
+            this.walletAddress = address;
+            this.walletConnected = true;
+            
+            document.getElementById('walletStatus').textContent = '✅ Подключён';
+            document.getElementById('walletAddress').textContent = address.slice(0, 6) + '...' + address.slice(-4);
+        }
+    },
+    
+    // ============================================================
+    //  ПОПОЛНЕНИЕ В TON
+    // ============================================================
+    buyTon(item) {
+        if (!this.walletConnected) {
+            this.showNotification('⚠️', 'Подключите кошелёк', 'Сначала подключите TON кошелёк в настройках');
+            return;
+        }
+        
+        this.showNotification('💎', 'Оплата TON', `Отправьте ${item.tonAmount} TON на адрес:`);
+        this.showNotification('📋', 'Адрес', this.walletAddress);
+        this.showNotification('⏳', 'Ожидание...', 'После оплаты баланс пополнится автоматически');
+        
+        // Демо-пополнение
+        setTimeout(() => {
+            this.balance += item.starsAmount;
+            this.showNotification('🎉', 'Пополнение успешно!', `+${item.starsAmount}⭐`);
+            playSound('bonus');
+            this.updateUI();
+            this.renderShopItems(this.currentShopTab);
+        }, 3000);
     },
     
     // ============================================================
@@ -780,6 +901,7 @@ const App = {
     init() {
         loadTheme(this);
         loadBg(this);
+        this.loadWallet();
         this.renderGames();
         renderAchievements(this);
         this.renderShopItems('stars');
@@ -830,11 +952,10 @@ const App = {
             });
         });
         
-        console.log('🎮 GiftArcade v2.5 — NFT + Маркет!');
-        console.log('🛒 Категории: Звёзды, Бонусы, Бейджи, Премиум, Подарки, Кейсы, NFT, Маркет');
-        console.log('🎁 Ежедневный бонус: 100⭐');
-        console.log('🎨 NFT-подарки: 5 штук в магазине, 6 в маркете');
-        console.log('📊 Маркет с фильтрацией по редкости');
+        console.log('🎮 GiftArcade v2.6 — TON + NFT + Маркет!');
+        console.log('🛒 Категории: Звёзды, Бонусы, Бейджи, Премиум, Подарки, Кейсы, NFT, Маркет, TON');
+        console.log('💎 Пополнение в TON: 1 TON = 100⭐, 5 TON = 550⭐, 10 TON = 1200⭐');
+        console.log('🔗 TON Кошелёк: подключение в настройках');
     }
 };
 
