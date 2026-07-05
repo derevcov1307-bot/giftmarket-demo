@@ -1,5 +1,5 @@
 // ============================================================
-//  ГЛАВНОЕ ПРИЛОЖЕНИЕ (App) — NFT
+//  ГЛАВНОЕ ПРИЛОЖЕНИЕ (App) — NFT + МАРКЕТ
 // ============================================================
 const App = {
     // СОСТОЯНИЕ
@@ -16,6 +16,7 @@ const App = {
     purchasedBadges: [],
     isPremium: false,
     boosters: { x2: 0, x3: 0 },
+    currentFilter: 'all',
     
     // ИГРЫ
     games: [
@@ -140,6 +141,68 @@ const App = {
                 icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417085.png',
                 price: 60
             }
+        ],
+        market: [
+            { 
+                id: 'm1', 
+                title: '🎨 Космический кот', 
+                rarity: 'rare',
+                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417118.png',
+                price: 50,
+                model: 'Космический кот',
+                backdrop: 'Галактика',
+                number: '#0427'
+            },
+            { 
+                id: 'm2', 
+                title: '💎 Алмазный дракон', 
+                rarity: 'legendary',
+                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417085.png',
+                price: 150,
+                model: 'Алмазный дракон',
+                backdrop: 'Золотой',
+                number: '#0001'
+            },
+            { 
+                id: 'm3', 
+                title: '🌌 Галактика', 
+                rarity: 'epic',
+                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417074.png',
+                price: 80,
+                model: 'Галактика',
+                backdrop: 'Космос',
+                number: '#0159'
+            },
+            { 
+                id: 'm4', 
+                title: '🔥 Огненный феникс', 
+                rarity: 'epic',
+                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417118.png',
+                price: 120,
+                model: 'Огненный феникс',
+                backdrop: 'Пламя',
+                number: '#0082'
+            },
+            { 
+                id: 'm5', 
+                title: '🌊 Водный дракон', 
+                rarity: 'rare',
+                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417085.png',
+                price: 60,
+                model: 'Водный дракон',
+                backdrop: 'Океан',
+                number: '#0317'
+            },
+            { 
+                id: 'm6', 
+                title: '⚡ Молниеносный тигр', 
+                rarity: 'legendary',
+                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417074.png',
+                price: 200,
+                model: 'Молниеносный тигр',
+                backdrop: 'Гроза',
+                number: '#0007'
+            }
         ]
     },
     
@@ -225,7 +288,11 @@ const App = {
         document.querySelectorAll('.shop-tab').forEach(t => {
             t.classList.toggle('active', t.dataset.tab === tab);
         });
-        this.renderShopItems(tab);
+        if (tab === 'market') {
+            this.renderMarket();
+        } else {
+            this.renderShopItems(tab);
+        }
         playSound('click');
     },
     
@@ -382,15 +449,11 @@ const App = {
             return;
         }
         
-        // В демо-режиме просто списываем звёзды и показываем уведомление
         this.balance -= item.price;
         this.showNotification('🎨', 'NFT куплен!', `${item.title} добавлен в коллекцию`);
         playSound('bonus');
         this.updateUI();
         this.renderShopItems(this.currentShopTab);
-        
-        // В реальном приложении здесь будет вызов Telegram API:
-        // await sendNft(this, item);
     },
     
     // ============================================================
@@ -406,33 +469,94 @@ const App = {
         const empty = document.getElementById('nftEmpty');
         if (!container) return;
         
-        // В демо-режиме показываем купленные NFT
-        // В реальном приложении — запрос к бэкенду
-        const nftList = [
-            { id: 'nft1', title: '🎨 Космический кот', icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417118.png', price: 50 },
-            { id: 'nft3', title: '🌌 Галактика', icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417074.png', price: 80 }
-        ];
+        const collection = JSON.parse(localStorage.getItem('nftCollection') || '[]');
+        const allNft = this.shopItems.market || [];
+        const userNft = allNft.filter(item => collection.includes(item.id));
         
-        if (nftList.length === 0) {
+        if (userNft.length === 0) {
             container.innerHTML = '';
-            empty.style.display = 'block';
+            if (empty) empty.style.display = 'block';
             return;
         }
         
-        empty.style.display = 'none';
-        container.innerHTML = nftList.map(nft => `
+        if (empty) empty.style.display = 'none';
+        container.innerHTML = userNft.map(nft => `
             <div class="nft-card" style="background:var(--bg-card);border-radius:var(--radius);border:1px solid var(--border-color);padding:16px;text-align:center;transition:var(--transition-bounce);backdrop-filter:blur(10px);">
-                <div style="width:80px;height:80px;border-radius:12px;overflow:hidden;margin:0 auto;border:2px solid var(--neon-gold);box-shadow:0 0 20px rgba(255,215,0,0.1);">
+                <div style="width:80px;height:80px;border-radius:12px;overflow:hidden;margin:0 auto;border:2px solid ${nft.rarity === 'legendary' ? '#ffd93d' : nft.rarity === 'epic' ? '#a855f7' : '#ff6b6b'};box-shadow:0 0 20px rgba(255,215,0,0.1);">
                     <img src="${nft.icon}" alt="${nft.title}" style="width:100%;height:100%;object-fit:cover;">
                 </div>
                 <div style="margin-top:8px;font-weight:600;font-size:14px;">${nft.title}</div>
                 <div style="font-size:11px;color:var(--text-secondary);">⭐ ${nft.price}</div>
-                <div style="margin-top:8px;display:flex;gap:6px;justify-content:center;">
+                <div style="margin-top:8px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
                     <span style="font-size:10px;padding:2px 10px;border-radius:100px;background:linear-gradient(135deg,#a855f7,#6d28d9);color:#fff;font-weight:600;">NFT</span>
-                    <span style="font-size:10px;padding:2px 10px;border-radius:100px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);">Редкий</span>
+                    <span style="font-size:10px;padding:2px 10px;border-radius:100px;background:${nft.rarity === 'legendary' ? 'rgba(255,215,0,0.15)' : nft.rarity === 'epic' ? 'rgba(168,85,247,0.15)' : 'rgba(255,107,107,0.15)'};color:${nft.rarity === 'legendary' ? '#ffd93d' : nft.rarity === 'epic' ? '#a855f7' : '#ff6b6b'};border:1px solid var(--border-color);">${nft.rarity.toUpperCase()}</span>
                 </div>
             </div>
         `).join('');
+    },
+    
+    // ============================================================
+    //  МАРКЕТ NFT
+    // ============================================================
+    filterMarket(filter) {
+        this.currentFilter = filter;
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.filter === filter);
+        });
+        this.renderMarket();
+    },
+    
+    renderMarket() {
+        const grid = document.getElementById('marketGrid');
+        if (!grid) return;
+        
+        const items = this.shopItems.market || [];
+        const filtered = this.currentFilter === 'all' 
+            ? items 
+            : items.filter(item => item.rarity === this.currentFilter);
+        
+        const collection = JSON.parse(localStorage.getItem('nftCollection') || '[]');
+        
+        grid.innerHTML = filtered.map(item => `
+            <div class="market-card">
+                <div class="nft-image">
+                    <img src="${item.icon}" alt="${item.title}">
+                </div>
+                <div class="nft-name">${item.title}</div>
+                <div class="nft-price">⭐ ${item.price}</div>
+                <span class="nft-rarity ${item.rarity}">${item.rarity.toUpperCase()}</span>
+                <div class="nft-id">${item.number}</div>
+                <button class="buy-btn" onclick="App.buyMarketNft('${item.id}')" ${collection.includes(item.id) ? 'disabled' : ''}>
+                    ${collection.includes(item.id) ? '✅ В коллекции' : 'Купить'}
+                </button>
+            </div>
+        `).join('');
+    },
+    
+    buyMarketNft(itemId) {
+        const item = this.shopItems.market.find(i => i.id === itemId);
+        if (!item) return;
+        
+        if (this.balance < item.price) {
+            this.showNotification('❌', 'Недостаточно звёзд', 'Пополните баланс');
+            return;
+        }
+        
+        const collection = JSON.parse(localStorage.getItem('nftCollection') || '[]');
+        if (collection.includes(itemId)) {
+            this.showNotification('⚠️', 'Уже есть', 'Этот NFT уже в вашей коллекции');
+            return;
+        }
+        
+        this.balance -= item.price;
+        collection.push(itemId);
+        localStorage.setItem('nftCollection', JSON.stringify(collection));
+        
+        this.showNotification('🎨', 'NFT куплен!', `${item.title} добавлен в коллекцию`);
+        playSound('bonus');
+        this.updateUI();
+        this.renderMarket();
+        this.renderNftCollection();
     },
     
     // ============================================================
@@ -571,7 +695,7 @@ const App = {
         if (target) target.classList.add('active');
         
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        const map = { home: 0, shop: 1, games: 2, profile: 3, nft: 3 };
+        const map = { home: 0, shop: 1, market: 2, games: 3, profile: 4 };
         if (map[page] !== undefined) {
             const items = document.querySelectorAll('.nav-item');
             if (items[map[page]]) items[map[page]].classList.add('active');
@@ -579,6 +703,9 @@ const App = {
         
         if (page === 'shop') {
             this.renderShopItems(this.currentShopTab);
+        }
+        if (page === 'market') {
+            this.renderMarket();
         }
         
         if (typeof lucide !== 'undefined') {
@@ -703,10 +830,10 @@ const App = {
             });
         });
         
-        console.log('🎮 GiftArcade v2.5 — NFT добавлены!');
-        console.log('🛒 Категории: Звёзды, Бонусы, Бейджи, Премиум, Подарки, Кейсы, NFT');
+        console.log('🎮 GiftArcade v2.5 — NFT + Маркет!');
+        console.log('🛒 Категории: Звёзды, Бонусы, Бейджи, Премиум, Подарки, Кейсы, NFT, Маркет');
         console.log('🎁 Ежедневный бонус: 100⭐');
-        console.log('🎨 NFT-подарки: 5 штук');
+        console.log('🎨 NFT-подарки: 5 штук в магазине, 6 в маркете');
     }
 };
 
