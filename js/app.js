@@ -1,8 +1,7 @@
 // ============================================================
-//  ГЛАВНОЕ ПРИЛОЖЕНИЕ (App) — TON ПОПОЛНЕНИЕ (ИСПРАВЛЕННОЕ)
+//  ГЛАВНОЕ ПРИЛОЖЕНИЕ (App) — ПОЛНАЯ ВЕРСИЯ
 // ============================================================
 const App = {
-    // СОСТОЯНИЕ
     user: { name: 'Игрок', status: '🟢 В сети', badge: '🏅' },
     telegramUser: null,
     balance: 0,
@@ -22,32 +21,12 @@ const App = {
     user_id: null,
     apiBase: 'https://giftmarket-demo.onrender.com',
     
-    // ИГРЫ
     games: [
-        { 
-            id: 'plinko', 
-            title: 'Plinko', 
-            desc: 'Шарик в ячейки с множителями до 22x', 
-            icon: 'https://rabbits.gift/assets/plinko2.webp',
-            status: '🔥' 
-        },
-        { 
-            id: 'coinflip', 
-            title: 'Coin Flip', 
-            desc: 'Орёл или решка — удвой ставку', 
-            icon: 'https://rabbits.gift/assets/coin.webp',
-            status: '' 
-        },
-        { 
-            id: 'crash', 
-            title: 'Crash', 
-            desc: 'Забери выигрыш до падения', 
-            icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417074.png',
-            status: '🔥' 
-        }
+        { id: 'plinko', title: 'Plinko', desc: 'Шарик в ячейки с множителями до 22x', icon: 'https://rabbits.gift/assets/plinko2.webp', status: '🔥' },
+        { id: 'coinflip', title: 'Coin Flip', desc: 'Орёл или решка — удвой ставку', icon: 'https://rabbits.gift/assets/coin.webp', status: '' },
+        { id: 'crash', title: 'Crash', desc: 'Забери выигрыш до падения', icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417074.png', status: '🔥' }
     ],
     
-    // ТОВАРЫ МАГАЗИНА
     shopItems: {
         bonus: [
             { id: 'b1', title: 'x2 Бустер', desc: 'Удваивает выигрыш в 5 играх', icon: '⚡', price: 0.5, amount: 1, tag: '🔥' },
@@ -64,66 +43,12 @@ const App = {
             { id: 'p2', title: 'Премиум 3 мес', desc: 'x2 бонус + эксклюзивный бейдж', icon: '👑', price: 5, tag: '🔥' }
         ],
         market: [
-            { 
-                id: 'm1', 
-                title: '🎨 Космический кот', 
-                rarity: 'rare',
-                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417118.png',
-                price: 2,
-                model: 'Космический кот',
-                backdrop: 'Галактика',
-                number: '#0427'
-            },
-            { 
-                id: 'm2', 
-                title: '💎 Алмазный дракон', 
-                rarity: 'legendary',
-                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417085.png',
-                price: 6,
-                model: 'Алмазный дракон',
-                backdrop: 'Золотой',
-                number: '#0001'
-            },
-            { 
-                id: 'm3', 
-                title: '🌌 Галактика', 
-                rarity: 'epic',
-                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417074.png',
-                price: 3.5,
-                model: 'Галактика',
-                backdrop: 'Космос',
-                number: '#0159'
-            },
-            { 
-                id: 'm4', 
-                title: '🔥 Огненный феникс', 
-                rarity: 'epic',
-                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417118.png',
-                price: 4.5,
-                model: 'Огненный феникс',
-                backdrop: 'Пламя',
-                number: '#0082'
-            },
-            { 
-                id: 'm5', 
-                title: '🌊 Водный дракон', 
-                rarity: 'rare',
-                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417085.png',
-                price: 2.5,
-                model: 'Водный дракон',
-                backdrop: 'Океан',
-                number: '#0317'
-            },
-            { 
-                id: 'm6', 
-                title: '⚡ Молниеносный тигр', 
-                rarity: 'legendary',
-                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417074.png',
-                price: 8,
-                model: 'Молниеносный тигр',
-                backdrop: 'Гроза',
-                number: '#0007'
-            }
+            { id: 'm1', title: '🎨 Космический кот', rarity: 'rare', icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417118.png', price: 2, model: 'Космический кот', backdrop: 'Галактика', number: '#0427' },
+            { id: 'm2', title: '💎 Алмазный дракон', rarity: 'legendary', icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417085.png', price: 6, model: 'Алмазный дракон', backdrop: 'Золотой', number: '#0001' },
+            { id: 'm3', title: '🌌 Галактика', rarity: 'epic', icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417074.png', price: 3.5, model: 'Галактика', backdrop: 'Космос', number: '#0159' },
+            { id: 'm4', title: '🔥 Огненный феникс', rarity: 'epic', icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417118.png', price: 4.5, model: 'Огненный феникс', backdrop: 'Пламя', number: '#0082' },
+            { id: 'm5', title: '🌊 Водный дракон', rarity: 'rare', icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417085.png', price: 2.5, model: 'Водный дракон', backdrop: 'Океан', number: '#0317' },
+            { id: 'm6', title: '⚡ Молниеносный тигр', rarity: 'legendary', icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417074.png', price: 8, model: 'Молниеносный тигр', backdrop: 'Гроза', number: '#0007' }
         ],
         deposit: [
             { id: 'd1', title: '1 TON', desc: 'Пополни баланс на 1 TON', icon: '💎', price: 1, amount: 1 },
@@ -150,31 +75,20 @@ const App = {
                 username: 'player',
                 photo_url: null
             };
-            
             this.telegramUser = user;
             this.user_id = user.id;
             this.user.name = user.first_name + (user.last_name ? ' ' + user.last_name : '');
             document.getElementById('welcomeName').textContent = '👋 Привет, ' + this.user.name + '!';
-            
             if (user.photo_url) {
-                document.getElementById('userAvatar').innerHTML = 
-                    `<img src="${user.photo_url}" alt="avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+                document.getElementById('userAvatar').innerHTML = `<img src="${user.photo_url}" alt="avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
             }
-            
             document.getElementById('authOverlay').classList.remove('show');
             this.showNotification('✅', 'Добро пожаловать!', 'Вы вошли через Telegram');
             this.loadUserData();
             this.updateUI();
             playSound('bonus');
-            
         } catch (e) {
-            this.telegramUser = {
-                id: 123456,
-                first_name: 'Демо',
-                last_name: 'Игрок',
-                username: 'demo_player',
-                photo_url: null
-            };
+            this.telegramUser = { id: 123456, first_name: 'Демо', last_name: 'Игрок', username: 'demo_player', photo_url: null };
             this.user_id = 123456;
             this.user.name = 'Демо Игрок';
             document.getElementById('welcomeName').textContent = '👋 Привет, ' + this.user.name + '!';
@@ -186,13 +100,12 @@ const App = {
     },
     
     // ============================================================
-    //  ЗАГРУЗКА ДАННЫХ С БЭКЕНДА
+    //  ЗАГРУЗКА ДАННЫХ
     // ============================================================
     async loadUserData() {
         try {
             const response = await fetch(`${this.apiBase}/api/user/${this.user_id}`);
             const data = await response.json();
-            
             if (data.ok) {
                 this.balance = data.user.balance / 100;
                 this.totalGames = data.user.total_games;
@@ -257,12 +170,10 @@ const App = {
     buyItem(category, itemId) {
         const item = this.shopItems[category]?.find(i => i.id === itemId);
         if (!item) return;
-        
         if (this.balance < item.price) {
             this.showNotification('❌', 'Недостаточно TON', 'Пополните баланс');
             return;
         }
-        
         this.balance = Math.round((this.balance - item.price) * 100) / 100;
         this.showNotification('🎉', 'Покупка успешна!', `${item.title} куплен`);
         playSound('bonus');
@@ -289,7 +200,7 @@ const App = {
     },
     
     // ============================================================
-    //  TON ПОПОЛНЕНИЕ (ИСПРАВЛЕННОЕ)
+    //  TON ПОПОЛНЕНИЕ
     // ============================================================
     async connectWallet() {
         try {
@@ -297,31 +208,23 @@ const App = {
                 this.showNotification('ℹ️', 'Кошелёк уже подключён', this.walletAddress);
                 return;
             }
-            
             if (typeof TonConnect === 'undefined') {
                 this.showNotification('❌', 'TON Connect не загружен', 'Проверьте интернет-соединение');
                 return;
             }
-            
             const connector = new TonConnect();
             const wallet = await connector.connect({
                 manifestUrl: 'https://derevcov1307-bot.github.io/giftmarket-demo/tonconnect-manifest.json'
             });
-            
             this.walletAddress = wallet.account.address;
             this.walletConnected = true;
-            
             document.getElementById('walletStatus').textContent = '✅ Подключён';
             document.getElementById('walletAddress').textContent = this.walletAddress.slice(0, 6) + '...' + this.walletAddress.slice(-4);
-            
             this.showNotification('✅', 'Кошелёк подключён!', this.walletAddress.slice(0, 6) + '...' + this.walletAddress.slice(-4));
             playSound('bonus');
-            
             localStorage.setItem('walletAddress', this.walletAddress);
             localStorage.setItem('walletConnected', 'true');
-            
             this.renderShopItems(this.currentShopTab);
-            
         } catch (error) {
             console.error('Ошибка подключения кошелька:', error);
             this.showNotification('❌', 'Ошибка подключения', 'Попробуйте позже');
@@ -333,47 +236,60 @@ const App = {
             this.showNotification('⚠️', 'Подключите кошелёк', 'Сначала подключите TON кошелёк в настройках');
             return;
         }
-        
         if (!item) {
             this.showNotification('❌', 'Ошибка', 'Выберите сумму для пополнения');
             return;
         }
-        
-        this.showNotification('💎', 'Оплата TON', `Отправьте ${item.price} TON на адрес:`);
-        this.showNotification('📋', 'Адрес', this.walletAddress);
-        this.showNotification('⏳', 'Ожидание...', 'После оплаты баланс пополнится автоматически');
-        
-        setTimeout(async () => {
-            try {
-                const response = await fetch(`${this.apiBase}/api/balance/add`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        user_id: this.user_id,
-                        amount: Math.round(item.amount * 100)
-                    })
-                });
-                const data = await response.json();
-                this.balance = data.balance / 100;
-                this.showNotification('🎉', 'Пополнение успешно!', `+${item.amount} TON`);
-                playSound('bonus');
-                this.updateUI();
-                this.renderShopItems(this.currentShopTab);
-            } catch (error) {
-                console.error('Ошибка пополнения:', error);
-                this.showNotification('❌', 'Ошибка', 'Не удалось пополнить баланс');
+        try {
+            const response = await fetch(`${this.apiBase}/api/create_invoice`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: this.user_id,
+                    amount: item.price,
+                    wallet_address: this.walletAddress
+                })
+            });
+            const data = await response.json();
+            if (data.ok) {
+                this.showNotification('💎', 'Оплатите счёт', `Отправьте ${item.price} TON на адрес:`);
+                this.showNotification('📋', 'Адрес', data.address);
+                this.showNotification('⏳', 'Ожидание...', 'После оплаты баланс пополнится автоматически');
+                this.checkTransaction(data.invoice_id);
+            } else {
+                this.showNotification('❌', 'Ошибка', data.error || 'Не удалось создать счёт');
             }
-        }, 3000);
+        } catch (error) {
+            console.error('Ошибка пополнения:', error);
+            this.showNotification('❌', 'Ошибка', 'Не удалось пополнить баланс');
+        }
+    },
+    
+    async checkTransaction(invoiceId) {
+        const interval = setInterval(async () => {
+            try {
+                const response = await fetch(`${this.apiBase}/api/check_invoice/${invoiceId}`);
+                const data = await response.json();
+                if (data.paid) {
+                    clearInterval(interval);
+                    this.balance = data.balance / 100;
+                    this.showNotification('🎉', 'Пополнение успешно!', `+${data.amount} TON`);
+                    playSound('bonus');
+                    this.updateUI();
+                    this.renderShopItems(this.currentShopTab);
+                }
+            } catch (error) {
+                console.error('Ошибка проверки транзакции:', error);
+            }
+        }, 5000);
     },
     
     loadWallet() {
         const address = localStorage.getItem('walletAddress');
         const connected = localStorage.getItem('walletConnected') === 'true';
-        
         if (address && connected) {
             this.walletAddress = address;
             this.walletConnected = true;
-            
             document.getElementById('walletStatus').textContent = '✅ Подключён';
             document.getElementById('walletAddress').textContent = address.slice(0, 6) + '...' + address.slice(-4);
         }
@@ -400,21 +316,14 @@ const App = {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         const target = document.getElementById(`page-${page}`);
         if (target) target.classList.add('active');
-        
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         const map = { home: 0, shop: 1, market: 2, games: 3, profile: 4 };
         if (map[page] !== undefined) {
             const items = document.querySelectorAll('.nav-item');
             if (items[map[page]]) items[map[page]].classList.add('active');
         }
-        
-        if (page === 'shop') {
-            this.renderShopItems(this.currentShopTab);
-        }
-        if (page === 'market') {
-            this.renderMarket();
-        }
-        
+        if (page === 'shop') this.renderShopItems(this.currentShopTab);
+        if (page === 'market') this.renderMarket();
         if (typeof lucide !== 'undefined') {
             setTimeout(() => lucide.createIcons(), 50);
         }
@@ -449,9 +358,7 @@ const App = {
     renderShopItems(tab) {
         const grid = document.getElementById('shopGrid');
         if (!grid) return;
-        
         const items = this.shopItems[tab] || [];
-        
         grid.innerHTML = items.map(item => {
             let iconHtml = '';
             if (tab === 'deposit') {
@@ -459,9 +366,7 @@ const App = {
             } else {
                 iconHtml = `<div class="shop-icon">${item.icon}</div>`;
             }
-            
             const isDeposit = tab === 'deposit';
-            
             return `
                 <div class="shop-item">
                     ${iconHtml}
@@ -477,7 +382,6 @@ const App = {
                 </div>
             `;
         }).join('');
-        
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
@@ -486,12 +390,8 @@ const App = {
     renderMarket() {
         const grid = document.getElementById('marketGrid');
         if (!grid) return;
-        
         const items = this.shopItems.market || [];
-        const filtered = this.currentFilter === 'all' 
-            ? items 
-            : items.filter(item => item.rarity === this.currentFilter);
-        
+        const filtered = this.currentFilter === 'all' ? items : items.filter(item => item.rarity === this.currentFilter);
         grid.innerHTML = filtered.map(item => `
             <div class="market-card" onclick="App.buyItem('market', '${item.id}')">
                 <div class="nft-image">
@@ -518,17 +418,14 @@ const App = {
         const container = document.getElementById('nftCollection');
         const empty = document.getElementById('nftEmpty');
         if (!container) return;
-        
         const collection = JSON.parse(localStorage.getItem('nftCollection') || '[]');
         const allNft = this.shopItems.market || [];
         const userNft = allNft.filter(item => collection.includes(item.id));
-        
         if (userNft.length === 0) {
             container.innerHTML = '';
             if (empty) empty.style.display = 'block';
             return;
         }
-        
         if (empty) empty.style.display = 'none';
         container.innerHTML = userNft.map(nft => `
             <div class="nft-card">
@@ -551,7 +448,6 @@ const App = {
     renderGames() {
         const list = document.getElementById('gamesList');
         if (!list) return;
-        
         list.innerHTML = this.games.map(g => `
             <div class="settings-item" onclick="App.openGame('${g.id}')" style="cursor:pointer;">
                 <div class="left">
@@ -580,7 +476,6 @@ const App = {
         }
         this.showPage('game');
         playSound('click');
-        
         if (typeof lucide !== 'undefined') {
             setTimeout(() => lucide.createIcons(), 100);
         }
@@ -624,29 +519,24 @@ const App = {
         renderAchievements(this);
         this.renderShopItems('bonus');
         this.updateUI();
-        
         if (typeof TonConnect === 'undefined') {
             console.warn('⚠️ TON Connect не загружен, проверьте интернет');
         } else {
             console.log('✅ TON Connect загружен');
         }
-        
         if (window.Telegram && window.Telegram.WebApp) {
             setTimeout(() => this.authViaTelegram(), 500);
         } else {
             document.getElementById('authOverlay').classList.add('show');
         }
-        
         if (typeof lucide !== 'undefined') {
             setTimeout(() => lucide.createIcons(), 200);
         }
-        
         setInterval(() => {
             const el = document.getElementById('onlinePlayers');
             const current = parseInt(el.textContent.replace(/,/g, ''));
             el.textContent = Math.max(100, current + Math.floor(Math.random() * 20) - 5).toLocaleString();
         }, 4000);
-        
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', function() {
                 const page = this.dataset.page;
@@ -656,20 +546,17 @@ const App = {
                 playSound('click');
             });
         });
-        
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
                 document.querySelectorAll('.modal-overlay.show').forEach(m => m.classList.remove('show'));
             }
         });
-        
         document.querySelectorAll('.modal-overlay').forEach(m => {
             m.addEventListener('click', function(e) {
                 if (e.target === this) this.classList.remove('show');
             });
         });
-        
-        console.log('🎮 GiftArcade v3.1 — TON Пополнение!');
+        console.log('🎮 GiftArcade v3.1 — TON Пополнение (без демо)!');
         console.log('💎 Валюта: TON');
         console.log('💳 Пополнение через TON Connect');
     }
