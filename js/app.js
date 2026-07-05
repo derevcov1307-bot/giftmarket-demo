@@ -481,15 +481,15 @@ const App = {
         
         if (empty) empty.style.display = 'none';
         container.innerHTML = userNft.map(nft => `
-            <div class="nft-card" style="background:var(--bg-card);border-radius:var(--radius);border:1px solid var(--border-color);padding:16px;text-align:center;transition:var(--transition-bounce);backdrop-filter:blur(10px);">
-                <div style="width:80px;height:80px;border-radius:12px;overflow:hidden;margin:0 auto;border:2px solid ${nft.rarity === 'legendary' ? '#ffd93d' : nft.rarity === 'epic' ? '#a855f7' : '#ff6b6b'};box-shadow:0 0 20px rgba(255,215,0,0.1);">
-                    <img src="${nft.icon}" alt="${nft.title}" style="width:100%;height:100%;object-fit:cover;">
+            <div class="nft-card">
+                <div class="nft-image">
+                    <img src="${nft.icon}" alt="${nft.title}">
                 </div>
-                <div style="margin-top:8px;font-weight:600;font-size:14px;">${nft.title}</div>
-                <div style="font-size:11px;color:var(--text-secondary);">⭐ ${nft.price}</div>
-                <div style="margin-top:8px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
-                    <span style="font-size:10px;padding:2px 10px;border-radius:100px;background:linear-gradient(135deg,#a855f7,#6d28d9);color:#fff;font-weight:600;">NFT</span>
-                    <span style="font-size:10px;padding:2px 10px;border-radius:100px;background:${nft.rarity === 'legendary' ? 'rgba(255,215,0,0.15)' : nft.rarity === 'epic' ? 'rgba(168,85,247,0.15)' : 'rgba(255,107,107,0.15)'};color:${nft.rarity === 'legendary' ? '#ffd93d' : nft.rarity === 'epic' ? '#a855f7' : '#ff6b6b'};border:1px solid var(--border-color);">${nft.rarity.toUpperCase()}</span>
+                <div class="nft-name">${nft.title}</div>
+                <div class="nft-price">⭐ ${nft.price}</div>
+                <div class="nft-badges">
+                    <span class="nft-badge nft">NFT</span>
+                    <span class="nft-badge ${nft.rarity}">${nft.rarity.toUpperCase()}</span>
                 </div>
             </div>
         `).join('');
@@ -834,6 +834,7 @@ const App = {
         console.log('🛒 Категории: Звёзды, Бонусы, Бейджи, Премиум, Подарки, Кейсы, NFT, Маркет');
         console.log('🎁 Ежедневный бонус: 100⭐');
         console.log('🎨 NFT-подарки: 5 штук в магазине, 6 в маркете');
+        console.log('📊 Маркет с фильтрацией по редкости');
     }
 };
 
