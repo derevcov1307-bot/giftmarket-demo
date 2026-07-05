@@ -5,7 +5,7 @@ const App = {
     // СОСТОЯНИЕ
     user: { name: 'Игрок', status: '🟢 В сети', badge: '🏅' },
     telegramUser: null,
-    balance: 0, // Баланс в TON (начинается с 0)
+    balance: 0, // Баланс в TON
     totalGames: 0,
     wins: 0,
     gifts: 0,
@@ -20,13 +20,14 @@ const App = {
     walletAddress: null,
     walletConnected: false,
     user_id: null,
+    apiBase: 'https://giftmarket-demo.onrender.com',
     
     // ИГРЫ
     games: [
         { 
             id: 'plinko', 
             title: 'Plinko', 
-            desc: 'Шарик в ячейки с множителями', 
+            desc: 'Шарик в ячейки с множителями до 22x', 
             icon: 'https://rabbits.gift/assets/plinko2.webp',
             status: '🔥' 
         },
@@ -182,11 +183,11 @@ const App = {
     // ============================================================
     async loadUserData() {
         try {
-            const response = await fetch(`https://giftmarket-demo.onrender.com/api/user/${this.user_id}`);
+            const response = await fetch(`${this.apiBase}/api/user/${this.user_id}`);
             const data = await response.json();
             
             if (data.ok) {
-                this.balance = data.user.balance / 100; // Переводим из копеек в TON
+                this.balance = data.user.balance / 100;
                 this.totalGames = data.user.total_games;
                 this.wins = data.user.wins;
                 this.gifts = data.user.gifts;
@@ -194,19 +195,18 @@ const App = {
                 this.user.badge = data.user.badge;
                 this.user.status = data.user.status;
             } else {
-                // Создаём пользователя
                 await this.createUser();
             }
         } catch (error) {
             console.log('ℹ️ Бэкенд не доступен, используем локальные данные');
-            this.balance = 1; // 1 TON для демо
+            this.balance = 1;
         }
         this.updateUI();
     },
     
     async createUser() {
         try {
-            await fetch(`https://giftmarket-demo.onrender.com/api/user/${this.user_id}`, {
+            await fetch(`${this.apiBase}/api/user/${this.user_id}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -226,17 +226,17 @@ const App = {
     // ============================================================
     async addBalance(amount) {
         try {
-            const response = await fetch('https://giftmarket-demo.onrender.com/api/balance/add', {
+            const response = await fetch(`${this.apiBase}/api/balance/add`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     user_id: this.user_id,
-                    amount: Math.round(amount * 100) // Переводим в копейки
+                    amount: Math.round(amount * 100)
                 })
             });
             const data = await response.json();
             this.balance = data.balance / 100;
-            this.showNotification('💎', `+${amount} TON`, 'Баланс пополнен');
+            this.showNotification('💎', `+${amount.toFixed(2)} TON`, 'Баланс пополнен');
             playSound('bonus');
             this.updateUI();
         } catch (error) {
@@ -266,7 +266,7 @@ const App = {
     
     async savePurchase(item) {
         try {
-            await fetch('https://giftmarket-demo.onrender.com/api/purchase', {
+            await fetch(`${this.apiBase}/api/purchase`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -296,14 +296,209 @@ const App = {
     },
     
     // ============================================================
-    //  ОСТАЛЬНЫЕ МЕТОДЫ
+    //  СТРАНИЦЫ
     // ============================================================
-    showNotification(icon, title, desc) { showNotification(icon, title, desc); },
-    toggleTheme() { toggleTheme(this); },
-    setBg(bg) { setBg(this, bg); },
-    showNftCollection() { this.showPage('nft'); this.renderNftCollection(); },
-    filterMarket(filter) { this.currentFilter = filter; this.renderMarket(); },
-    openCase(category, itemId) { /* Логика кейсов */ },
+    showPage(page) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        const target = document.getElementById(`page-${page}`);
+        if (target) target.classList.add('active');
+        
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        const map = { home: 0, shop: 1, market: 2, games: 3, profile: 4 };
+        if (map[page] !== undefined) {
+            const items = document.querySelectorAll('.nav-item');
+            if (items[map[page]]) items[map[page]].classList.add('active');
+        }
+        
+        if (page === 'shop') {
+            this.renderShopItems(this.currentShopTab);
+        }
+        if (page === 'market') {
+            this.renderMarket();
+        }
+        
+        if (typeof lucide !== 'undefined') {
+            setTimeout(() => lucide.createIcons(), 50);
+        }
+    },
+    
+    goHome() { this.showPage('home'); },
+    openProfileModal() { openProfileModal(this); },
+    saveProfile() { saveProfile(this); },
+    openStatusModal() { openStatusModal(this); },
+    setStatus(status) { setStatus(this, status); },
+    closeModal(id) { closeModal(id); },
+    showAbout() { showAbout(); },
+    showBalance() { this.showNotification('💰', 'Баланс', `${this.balance.toFixed(2)} TON`); },
+    openBgModal() { openBgModal(); },
+    
+    // ============================================================
+    //  МАГАЗИН
+    // ============================================================
+    switchShopTab(tab) {
+        this.currentShopTab = tab;
+        document.querySelectorAll('.shop-tab').forEach(t => {
+            t.classList.toggle('active', t.dataset.tab === tab);
+        });
+        if (tab === 'market') {
+            this.renderMarket();
+        } else {
+            this.renderShopItems(tab);
+        }
+        playSound('click');
+    },
+    
+    renderShopItems(tab) {
+        const grid = document.getElementById('shopGrid');
+        if (!grid) return;
+        
+        const items = this.shopItems[tab] || [];
+        
+        grid.innerHTML = items.map(item => `
+            <div class="shop-item" onclick="App.buyItem('${tab}', '${item.id}')">
+                <div class="shop-icon">${item.icon}</div>
+                <div class="shop-info">
+                    <div class="shop-title">${item.title}</div>
+                    <div class="shop-desc">${item.desc}</div>
+                    <div class="shop-price">${item.price.toFixed(2)} TON</div>
+                </div>
+                ${item.tag ? `<span class="shop-tag hot">${item.tag}</span>` : ''}
+                <button class="shop-btn">
+                    Купить
+                </button>
+            </div>
+        `).join('');
+        
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    },
+    
+    renderMarket() {
+        const grid = document.getElementById('marketGrid');
+        if (!grid) return;
+        
+        const items = this.shopItems.market || [];
+        const filtered = this.currentFilter === 'all' 
+            ? items 
+            : items.filter(item => item.rarity === this.currentFilter);
+        
+        grid.innerHTML = filtered.map(item => `
+            <div class="market-card" onclick="App.buyItem('market', '${item.id}')">
+                <div class="nft-image">
+                    <img src="${item.icon}" alt="${item.title}">
+                </div>
+                <div class="nft-name">${item.title}</div>
+                <div class="nft-price">${item.price.toFixed(2)} TON</div>
+                <span class="nft-rarity ${item.rarity}">${item.rarity.toUpperCase()}</span>
+                <div class="nft-id">${item.number}</div>
+                <button class="buy-btn">Купить</button>
+            </div>
+        `).join('');
+    },
+    
+    // ============================================================
+    //  NFT КОЛЛЕКЦИЯ
+    // ============================================================
+    showNftCollection() {
+        this.showPage('nft');
+        this.renderNftCollection();
+    },
+    
+    renderNftCollection() {
+        const container = document.getElementById('nftCollection');
+        const empty = document.getElementById('nftEmpty');
+        if (!container) return;
+        
+        const collection = JSON.parse(localStorage.getItem('nftCollection') || '[]');
+        const allNft = this.shopItems.market || [];
+        const userNft = allNft.filter(item => collection.includes(item.id));
+        
+        if (userNft.length === 0) {
+            container.innerHTML = '';
+            if (empty) empty.style.display = 'block';
+            return;
+        }
+        
+        if (empty) empty.style.display = 'none';
+        container.innerHTML = userNft.map(nft => `
+            <div class="nft-card">
+                <div class="nft-image">
+                    <img src="${nft.icon}" alt="${nft.title}">
+                </div>
+                <div class="nft-name">${nft.title}</div>
+                <div class="nft-price">${nft.price.toFixed(2)} TON</div>
+                <div class="nft-badges">
+                    <span class="nft-badge nft">NFT</span>
+                    <span class="nft-badge ${nft.rarity}">${nft.rarity.toUpperCase()}</span>
+                </div>
+            </div>
+        `).join('');
+    },
+    
+    // ============================================================
+    //  ИГРЫ
+    // ============================================================
+    renderGames() {
+        const list = document.getElementById('gamesList');
+        if (!list) return;
+        
+        list.innerHTML = this.games.map(g => `
+            <div class="settings-item" onclick="App.openGame('${g.id}')" style="cursor:pointer;">
+                <div class="left">
+                    <div class="game-icon-wrapper">
+                        <img src="${g.icon}" alt="${g.title}" loading="lazy">
+                    </div>
+                    <div class="info">
+                        <div class="title">${g.title}</div>
+                        <div class="desc">${g.desc}</div>
+                    </div>
+                </div>
+                <div class="right">${g.status} →</div>
+            </div>
+        `).join('');
+    },
+    
+    openGame(gameId) {
+        const game = this.games.find(g => g.id === gameId);
+        if (!game) return;
+        const content = document.getElementById('gameContent');
+        if (!content) return;
+        switch(gameId) {
+            case 'plinko': content.innerHTML = renderPlinko(); break;
+            case 'coinflip': content.innerHTML = renderCoinFlip(); break;
+            case 'crash': content.innerHTML = renderCrash(); break;
+        }
+        this.showPage('game');
+        playSound('click');
+        
+        if (typeof lucide !== 'undefined') {
+            setTimeout(() => lucide.createIcons(), 100);
+        }
+    },
+    
+    // ============================================================
+    //  МЕТОДЫ ДЛЯ ИГР
+    // ============================================================
+    async saveGameResult(gameType, bet, winAmount, multiplier, result) {
+        try {
+            await fetch(`${this.apiBase}/api/history`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: this.user_id,
+                    game_type: gameType,
+                    bet: Math.round(bet * 100),
+                    win_amount: Math.round(winAmount * 100),
+                    multiplier: multiplier,
+                    result: result
+                })
+            });
+        } catch (error) {
+            console.log('ℹ️ Ошибка сохранения истории');
+        }
+    },
+    
     playPlinko() { playPlinko(this); },
     coinFlip(choice) { coinFlip(this, choice); },
     startCrash() { startCrash(this); },
@@ -326,6 +521,17 @@ const App = {
             document.getElementById('authOverlay').classList.add('show');
         }
         
+        if (typeof lucide !== 'undefined') {
+            setTimeout(() => lucide.createIcons(), 200);
+        }
+        
+        // Онлайн
+        setInterval(() => {
+            const el = document.getElementById('onlinePlayers');
+            const current = parseInt(el.textContent.replace(/,/g, ''));
+            el.textContent = Math.max(100, current + Math.floor(Math.random() * 20) - 5).toLocaleString();
+        }, 4000);
+        
         // Навигация
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', function() {
@@ -337,8 +543,22 @@ const App = {
             });
         });
         
+        // Закрытие модалок
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.show').forEach(m => m.classList.remove('show'));
+            }
+        });
+        
+        document.querySelectorAll('.modal-overlay').forEach(m => {
+            m.addEventListener('click', function(e) {
+                if (e.target === this) this.classList.remove('show');
+            });
+        });
+        
         console.log('🎮 GiftArcade v3.0 — TON Экономика!');
         console.log('💎 Валюта: TON');
+        console.log('💳 Баланс сохраняется в PostgreSQL');
     }
 };
 
