@@ -1,468 +1,661 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GiftArcade — игры с выводом</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://unpkg.com/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
-    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/profile.css">
-    <link rel="stylesheet" href="css/games.css">
-    <link rel="stylesheet" href="css/ui.css">
-    <link rel="stylesheet" href="css/responsive.css">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#07070d">
+// ============================================================
+//  ГЛАВНОЕ ПРИЛОЖЕНИЕ (App) — TON ПОПОЛНЕНИЕ
+// ============================================================
+const App = {
+    // СОСТОЯНИЕ
+    user: { name: 'Игрок', status: '🟢 В сети', badge: '🏅' },
+    telegramUser: null,
+    balance: 0,
+    totalGames: 0,
+    wins: 0,
+    gifts: 0,
+    darkTheme: true,
+    currentBg: 'dark',
+    playedGames: new Set(),
+    achievements: ACHIEVEMENTS_DATA,
+    purchasedBadges: [],
+    isPremium: false,
+    boosters: { x2: 0, x3: 0 },
+    currentFilter: 'all',
+    walletAddress: null,
+    walletConnected: false,
+    user_id: null,
+    apiBase: 'https://giftmarket-demo.onrender.com',
     
-    <!-- Звуки -->
-    <script>
-        let audioCtx = null;
-        function playSound(type) {
-            try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                switch(type) {
-                    case 'win':
-                        osc.frequency.value = 880;
-                        osc.type = 'sine';
-                        gain.gain.value = 0.15;
-                        osc.start();
-                        setTimeout(() => { osc.frequency.value = 1100; }, 100);
-                        setTimeout(() => { osc.stop(); }, 300);
-                        break;
-                    case 'lose':
-                        osc.frequency.value = 440;
-                        osc.type = 'sawtooth';
-                        gain.gain.value = 0.08;
-                        osc.start();
-                        setTimeout(() => { osc.frequency.value = 330; }, 150);
-                        setTimeout(() => { osc.stop(); }, 300);
-                        break;
-                    case 'bonus':
-                        osc.frequency.value = 523;
-                        osc.type = 'sine';
-                        gain.gain.value = 0.12;
-                        osc.start();
-                        setTimeout(() => { osc.frequency.value = 659; }, 100);
-                        setTimeout(() => { osc.frequency.value = 784; }, 200);
-                        setTimeout(() => { osc.stop(); }, 350);
-                        break;
-                    case 'click':
-                        osc.frequency.value = 600;
-                        osc.type = 'sine';
-                        gain.gain.value = 0.05;
-                        osc.start();
-                        setTimeout(() => { osc.stop(); }, 50);
-                        break;
-                }
-            } catch(e) {}
+    // ИГРЫ
+    games: [
+        { 
+            id: 'plinko', 
+            title: 'Plinko', 
+            desc: 'Шарик в ячейки с множителями до 22x', 
+            icon: 'https://rabbits.gift/assets/plinko2.webp',
+            status: '🔥' 
+        },
+        { 
+            id: 'coinflip', 
+            title: 'Coin Flip', 
+            desc: 'Орёл или решка — удвой ставку', 
+            icon: 'https://rabbits.gift/assets/coin.webp',
+            status: '' 
+        },
+        { 
+            id: 'crash', 
+            title: 'Crash', 
+            desc: 'Забери выигрыш до падения', 
+            icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417074.png',
+            status: '🔥' 
         }
-    </script>
-</head>
-<body>
-
-    <!-- ===== ЭКРАН АВТОРИЗАЦИИ ===== -->
-    <div class="auth-overlay show" id="authOverlay">
-        <div class="auth-card">
-            <div class="auth-icon">🎮</div>
-            <h2>GiftArcade</h2>
-            <p>Войдите через Telegram, чтобы начать играть и выигрывать звёзды</p>
-            <button class="auth-btn" onclick="App.authViaTelegram()">
-                ✈️ Войти через Telegram
-            </button>
-            <div class="footer-text">Демо-версия · Данные не сохраняются</div>
-        </div>
-    </div>
-
-    <!-- ФОНЫ -->
-    <div class="bg-option dark active" data-bg="dark"></div>
-    <div class="bg-option gradient" data-bg="gradient"></div>
-    <div class="bg-option particles" data-bg="particles" id="particlesBg"></div>
-
-    <!-- УВЕДОМЛЕНИЯ -->
-    <div class="notification-container" id="notifContainer"></div>
-
-    <!-- ОСНОВНОЙ КОНТЕЙНЕР -->
-    <div class="app-container" id="app">
-
-        <!-- TOP BAR -->
-        <div class="top-bar">
-            <div class="logo" onclick="App.showPage('home')">
-                <div class="logo-icon">
-                    <i data-lucide="gamepad-2" style="color:#fff;width:24px;height:24px;"></i>
-                </div>
-                <span class="logo-text">GiftArcade</span>
-            </div>
-            <div class="top-actions">
-                <button class="theme-toggle" onclick="App.toggleTheme()" id="themeBtn">
-                    <i data-lucide="moon" style="width:18px;height:18px;"></i>
-                </button>
-                <div class="balance" onclick="App.showBalance()">
-                    <i data-lucide="star" style="width:16px;height:16px;fill:#ffd93d;color:#ffd93d;"></i>
-                    <span id="userBalance">1 000</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- ===== СТРАНИЦА: ГЛАВНАЯ ===== -->
-        <div class="page active" id="page-home">
-            <div style="text-align:center;padding:12px 0 8px 0;">
-                <div style="font-size:28px;font-weight:700;" id="welcomeName">Добро пожаловать!</div>
-                <div style="font-size:14px;color:var(--text-secondary);margin-top:4px;">Играй и выигрывай звёзды</div>
-            </div>
-
-            <div class="profile-card" onclick="App.showPage('profile')">
-                <div class="profile-avatar" id="userAvatar">
-                    <i data-lucide="user" style="width:28px;height:28px;color:#fff;"></i>
-                </div>
-                <div class="profile-info">
-                    <div class="name"><span id="userName">Игрок</span></div>
-                    <div class="sub" id="userSub">🟢 В сети</div>
-                    <div class="stats">
-                        <span class="stats-item">
-                            <i data-lucide="trophy" style="width:14px;height:14px;display:inline-block;vertical-align:middle;"></i>
-                            <strong id="winsCount">0</strong>
-                        </span>
-                        <span class="stats-item">
-                            <i data-lucide="gift" style="width:14px;height:14px;display:inline-block;vertical-align:middle;"></i>
-                            <strong id="giftsCount">0</strong>
-                        </span>
-                    </div>
-                </div>
-                <div class="profile-badge" id="profileBadge">🏅</div>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-box"><div class="number" id="totalGames">0</div><div class="label">Игр</div></div>
-                <div class="stat-box"><div class="number" id="onlinePlayers">342</div><div class="label">Онлайн</div></div>
-                <div class="stat-box"><div class="number" id="totalPrizes">5 231</div><div class="label">Призов</div></div>
-            </div>
-
-            <!-- Ежедневный бонус -->
-            <div style="margin-bottom:12px;">
-                <button class="action-btn btn-gold" onclick="App.getDailyBonus()" id="dailyBonusBtn" style="width:100%;">
-                    🎁 Ежедневный бонус
-                </button>
-                <div style="text-align:center;font-size:11px;color:var(--text-secondary);margin-top:4px;" id="bonusStatus">Нажми, чтобы получить 100⭐</div>
-            </div>
-
-            <div class="action-buttons">
-                <button class="action-btn primary" onclick="App.addBalance(100)">
-                    <i data-lucide="plus" style="width:18px;height:18px;"></i> 100⭐
-                </button>
-                <button class="action-btn secondary" onclick="App.addBalance(500)">
-                    <i data-lucide="gem" style="width:18px;height:18px;"></i> 500⭐
-                </button>
-                <button class="action-btn secondary full" onclick="App.resetBalance()">
-                    <i data-lucide="refresh-cw" style="width:18px;height:18px;"></i> Сброс
-                </button>
-            </div>
-
-            <div class="achievements-section">
-                <div class="section-title">
-                    <span><i data-lucide="trophy" style="width:18px;height:18px;display:inline-block;vertical-align:middle;"></i> Достижения</span>
-                    <span class="see-all" id="achieveCount">0/6</span>
-                </div>
-                <div class="achievements-scroll" id="achievementsList"></div>
-            </div>
-        </div>
-
-        <!-- ===== СТРАНИЦА: МАГАЗИН ===== -->
-        <div class="page" id="page-shop">
-            <div style="padding:8px 0 12px 0;">
-                <div style="font-size:22px;font-weight:700;">
-                    <i data-lucide="shopping-bag" style="width:24px;height:24px;display:inline-block;vertical-align:middle;"></i> Магазин
-                </div>
-                <div style="font-size:13px;color:var(--text-secondary);">Пополни баланс и купи бонусы</div>
-            </div>
-
-            <!-- Вкладки магазина -->
-            <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px;">
-                <button class="shop-tab active" data-tab="stars" onclick="App.switchShopTab('stars')">
-                    <i data-lucide="star" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i> Звёзды
-                </button>
-                <button class="shop-tab" data-tab="bonus" onclick="App.switchShopTab('bonus')">
-                    <i data-lucide="zap" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i> Бонусы
-                </button>
-                <button class="shop-tab" data-tab="badges" onclick="App.switchShopTab('badges')">
-                    <i data-lucide="award" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i> Бейджи
-                </button>
-                <button class="shop-tab" data-tab="premium" onclick="App.switchShopTab('premium')">
-                    <i data-lucide="crown" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i> Премиум
-                </button>
-                <button class="shop-tab" data-tab="gifts" onclick="App.switchShopTab('gifts')">
-                    <i data-lucide="gift" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i> Подарки
-                </button>
-                <button class="shop-tab" data-tab="cases" onclick="App.switchShopTab('cases')">
-                    <i data-lucide="package" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i> Кейсы
-                </button>
-                <button class="shop-tab" data-tab="nft" onclick="App.switchShopTab('nft')">
-                    <i data-lucide="diamond" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i> NFT
-                </button>
-                <button class="shop-tab" data-tab="market" onclick="App.switchShopTab('market')">
-                    <i data-lucide="store" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i> Маркет
-                </button>
-                <button class="shop-tab" data-tab="ton" onclick="App.switchShopTab('ton')">
-                    <i data-lucide="wallet" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i> TON
-                </button>
-            </div>
-
-            <div class="shop-grid" id="shopGrid"></div>
-        </div>
-
-        <!-- ===== СТРАНИЦА: ИГРЫ ===== -->
-        <div class="page" id="page-games">
-            <div style="padding:8px 0 12px 0;">
-                <div style="font-size:22px;font-weight:700;">
-                    <i data-lucide="gamepad-2" style="width:24px;height:24px;display:inline-block;vertical-align:middle;"></i> Игры
-                </div>
-                <div style="font-size:13px;color:var(--text-secondary);">Выбери игру и начни выигрывать!</div>
-            </div>
-            <div class="games-list" id="gamesList"></div>
-        </div>
-
-        <!-- ===== СТРАНИЦА: ПРОФИЛЬ ===== -->
-        <div class="page" id="page-profile">
-            <div style="padding:8px 0 12px 0;">
-                <div style="font-size:22px;font-weight:700;">
-                    <i data-lucide="settings" style="width:24px;height:24px;display:inline-block;vertical-align:middle;"></i> Настройки
-                </div>
-            </div>
-
-            <div class="settings-group">
-                <div class="group-title">👤 Профиль</div>
-                <div class="settings-item" onclick="App.openProfileModal()">
-                    <div class="left">
-                        <span class="icon"><i data-lucide="edit" style="width:20px;height:20px;"></i></span>
-                        <div class="info">
-                            <div class="title">Изменить профиль</div>
-                            <div class="desc">Имя, статус, бейдж</div>
-                        </div>
-                    </div>
-                    <div class="right">→</div>
-                </div>
-                <div class="settings-item" onclick="App.openStatusModal()">
-                    <div class="left">
-                        <span class="icon"><i data-lucide="circle" style="width:20px;height:20px;color:#4ecdc4;"></i></span>
-                        <div class="info">
-                            <div class="title">Статус</div>
-                            <div class="desc" id="statusDisplay">В сети</div>
-                        </div>
-                    </div>
-                    <div class="right">→</div>
-                </div>
-                <div class="settings-item" onclick="App.showNftCollection()">
-                    <div class="left">
-                        <span class="icon"><i data-lucide="diamond" style="width:20px;height:20px;"></i></span>
-                        <div class="info">
-                            <div class="title">Мои NFT</div>
-                            <div class="desc">Коллекция NFT-подарков</div>
-                        </div>
-                    </div>
-                    <div class="right">→</div>
-                </div>
-                <div class="settings-item" onclick="App.connectWallet()">
-                    <div class="left">
-                        <span class="icon"><i data-lucide="wallet" style="width:20px;height:20px;"></i></span>
-                        <div class="info">
-                            <div class="title">TON Кошелёк</div>
-                            <div class="desc" id="walletStatus">Не подключён</div>
-                        </div>
-                    </div>
-                    <div class="right" id="walletAddress">→</div>
-                </div>
-            </div>
-
-            <div class="settings-group">
-                <div class="group-title">🎨 Оформление</div>
-                <div class="settings-item" onclick="App.toggleTheme()">
-                    <div class="left">
-                        <span class="icon"><i data-lucide="sun-moon" style="width:20px;height:20px;"></i></span>
-                        <div class="info"><div class="title">Тёмная тема</div></div>
-                    </div>
-                    <div class="right"><div class="toggle active" id="themeToggle"><div class="knob"></div></div></div>
-                </div>
-                <div class="settings-item" onclick="App.openBgModal()">
-                    <div class="left">
-                        <span class="icon"><i data-lucide="image" style="width:20px;height:20px;"></i></span>
-                        <div class="info"><div class="title">Фон</div><div class="desc" id="bgDisplay">Тёмный</div></div>
-                    </div>
-                    <div class="right">→</div>
-                </div>
-            </div>
-
-            <div class="settings-group">
-                <div class="group-title">ℹ️ О приложении</div>
-                <div class="settings-item">
-                    <div class="left">
-                        <span class="icon"><i data-lucide="smartphone" style="width:20px;height:20px;"></i></span>
-                        <div class="info"><div class="title">Версия</div><div class="desc">GiftArcade v2.6</div></div>
-                    </div>
-                    <div class="right">2026</div>
-                </div>
-                <div class="settings-item" onclick="App.showAbout()">
-                    <div class="left">
-                        <span class="icon"><i data-lucide="info" style="width:20px;height:20px;"></i></span>
-                        <div class="info"><div class="title">О проекте</div></div>
-                    </div>
-                    <div class="right">→</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ===== СТРАНИЦА: NFT КОЛЛЕКЦИЯ ===== -->
-        <div class="page" id="page-nft">
-            <button class="back-btn" onclick="App.goHome()" style="margin-bottom:12px;">
-                <i data-lucide="arrow-left" style="width:18px;height:18px;display:inline-block;vertical-align:middle;"></i> Назад
-            </button>
-            <div style="padding:8px 0 12px 0;">
-                <div style="font-size:22px;font-weight:700;">
-                    <i data-lucide="diamond" style="width:24px;height:24px;display:inline-block;vertical-align:middle;"></i> Мои NFT
-                </div>
-                <div style="font-size:13px;color:var(--text-secondary);">Твоя коллекция NFT-подарков</div>
-            </div>
-            <div id="nftCollection" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:8px 0;">
-                <!-- Генерируется JS -->
-            </div>
-            <div style="text-align:center;padding:20px 0;color:var(--text-secondary);font-size:13px;" id="nftEmpty">
-                У тебя пока нет NFT-подарков. Купи их в магазине!
-            </div>
-        </div>
-
-        <!-- ===== СТРАНИЦА: МАРКЕТ NFT ===== -->
-        <div class="page" id="page-market">
-            <div style="padding:8px 0 12px 0;">
-                <div style="font-size:22px;font-weight:700;">
-                    <i data-lucide="store" style="width:24px;height:24px;display:inline-block;vertical-align:middle;"></i> Маркет NFT
-                </div>
-                <div style="font-size:13px;color:var(--text-secondary);">Покупай и продавай NFT-подарки</div>
-            </div>
+    ],
+    
+    // ТОВАРЫ МАГАЗИНА
+    shopItems: {
+        bonus: [
+            { id: 'b1', title: 'x2 Бустер', desc: 'Удваивает выигрыш в 5 играх', icon: '⚡', price: 0.5, amount: 1, tag: '🔥' },
+            { id: 'b2', title: 'x3 Бустер', desc: 'Утраивает выигрыш в 3 играх', icon: '💫', price: 1, amount: 1 },
+            { id: 'b3', title: 'Счастливый билет', desc: '+50% к удаче в следующей игре', icon: '🍀', price: 0.3, amount: 1 }
+        ],
+        badges: [
+            { id: 'bg1', title: 'Кибер-панк', desc: 'Эксклюзивный бейдж', icon: '🤖', price: 0.7, tag: '🔥' },
+            { id: 'bg2', title: 'Космонавт', desc: 'Эксклюзивный бейдж', icon: '🚀', price: 0.5 },
+            { id: 'bg3', title: 'Маг', desc: 'Эксклюзивный бейдж', icon: '🧙', price: 1, tag: '🔥' }
+        ],
+        premium: [
+            { id: 'p1', title: 'Премиум 1 мес', desc: 'x2 бонус ко всем выигрышам', icon: '👑', price: 2, tag: '🔥' },
+            { id: 'p2', title: 'Премиум 3 мес', desc: 'x2 бонус + эксклюзивный бейдж', icon: '👑', price: 5, tag: '🔥' }
+        ],
+        market: [
+            { 
+                id: 'm1', 
+                title: '🎨 Космический кот', 
+                rarity: 'rare',
+                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417118.png',
+                price: 2,
+                model: 'Космический кот',
+                backdrop: 'Галактика',
+                number: '#0427'
+            },
+            { 
+                id: 'm2', 
+                title: '💎 Алмазный дракон', 
+                rarity: 'legendary',
+                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417085.png',
+                price: 6,
+                model: 'Алмазный дракон',
+                backdrop: 'Золотой',
+                number: '#0001'
+            },
+            { 
+                id: 'm3', 
+                title: '🌌 Галактика', 
+                rarity: 'epic',
+                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417074.png',
+                price: 3.5,
+                model: 'Галактика',
+                backdrop: 'Космос',
+                number: '#0159'
+            },
+            { 
+                id: 'm4', 
+                title: '🔥 Огненный феникс', 
+                rarity: 'epic',
+                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417118.png',
+                price: 4.5,
+                model: 'Огненный феникс',
+                backdrop: 'Пламя',
+                number: '#0082'
+            },
+            { 
+                id: 'm5', 
+                title: '🌊 Водный дракон', 
+                rarity: 'rare',
+                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417085.png',
+                price: 2.5,
+                model: 'Водный дракон',
+                backdrop: 'Океан',
+                number: '#0317'
+            },
+            { 
+                id: 'm6', 
+                title: '⚡ Молниеносный тигр', 
+                rarity: 'legendary',
+                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417074.png',
+                price: 8,
+                model: 'Молниеносный тигр',
+                backdrop: 'Гроза',
+                number: '#0007'
+            }
+        ],
+        deposit: [
+            { id: 'd1', title: '1 TON', desc: 'Пополни баланс на 1 TON', icon: '💎', price: 1, amount: 1 },
+            { id: 'd2', title: '5 TON', desc: 'Пополни баланс на 5 TON (бонус 5%)', icon: '💎', price: 5, amount: 5.25, tag: '🔥' },
+            { id: 'd3', title: '10 TON', desc: 'Пополни баланс на 10 TON (бонус 10%)', icon: '💎', price: 10, amount: 11, tag: '🔥' },
+            { id: 'd4', title: '25 TON', desc: 'Пополни баланс на 25 TON (бонус 15%)', icon: '💎', price: 25, amount: 28.75, tag: '🔥' },
+            { id: 'd5', title: '50 TON', desc: 'Пополни баланс на 50 TON (бонус 20%)', icon: '💎', price: 50, amount: 60, tag: '🔥' }
+        ]
+    },
+    
+    currentShopTab: 'bonus',
+    
+    // ============================================================
+    //  АВТОРИЗАЦИЯ
+    // ============================================================
+    authViaTelegram() {
+        try {
+            const tg = window.Telegram.WebApp;
+            tg.expand();
+            const user = tg.initDataUnsafe?.user || {
+                id: 123456,
+                first_name: 'Игрок',
+                last_name: '',
+                username: 'player',
+                photo_url: null
+            };
             
-            <!-- Фильтры -->
-            <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px;">
-                <button class="filter-btn active" data-filter="all" onclick="App.filterMarket('all')">Все</button>
-                <button class="filter-btn" data-filter="rare" onclick="App.filterMarket('rare')">🔥 Редкие</button>
-                <button class="filter-btn" data-filter="epic" onclick="App.filterMarket('epic')">💎 Эпик</button>
-                <button class="filter-btn" data-filter="legendary" onclick="App.filterMarket('legendary')">👑 Легендарные</button>
-            </div>
+            this.telegramUser = user;
+            this.user_id = user.id;
+            this.user.name = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+            document.getElementById('welcomeName').textContent = '👋 Привет, ' + this.user.name + '!';
             
-            <div id="marketGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:8px 0;">
-                <!-- Генерируется JS -->
-            </div>
-        </div>
-
-        <!-- ===== СТРАНИЦА: ИГРА ===== -->
-        <div class="page" id="page-game">
-            <button class="back-btn" onclick="App.goHome()" style="margin-bottom:12px;">
-                <i data-lucide="arrow-left" style="width:18px;height:18px;display:inline-block;vertical-align:middle;"></i> Назад
-            </button>
-            <div id="gameContent"></div>
-        </div>
-
-        <!-- ===== BOTTOM NAV ===== -->
-        <div class="bottom-nav">
-            <button class="nav-item active" data-page="home">
-                <i data-lucide="home" class="nav-icon"></i>
-                <span class="nav-label">Главная</span>
-            </button>
-            <button class="nav-item" data-page="shop">
-                <i data-lucide="shopping-bag" class="nav-icon"></i>
-                <span class="nav-label">Магазин</span>
-            </button>
-            <button class="nav-item" data-page="market">
-                <i data-lucide="store" class="nav-icon"></i>
-                <span class="nav-label">Маркет</span>
-            </button>
-            <button class="nav-item" data-page="games">
-                <i data-lucide="gamepad-2" class="nav-icon"></i>
-                <span class="nav-label">Игры</span>
-            </button>
-            <button class="nav-item" data-page="profile">
-                <i data-lucide="user" class="nav-icon"></i>
-                <span class="nav-label">Профиль</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- МОДАЛКИ -->
-    <div class="modal-overlay" id="profileModal">
-        <div class="modal-content">
-            <h3>✏️ Редактировать</h3>
-            <div class="input-group"><label>Имя</label><input type="text" id="editName" value="Игрок"></div>
-            <div class="input-group"><label>Статус</label>
-                <select id="editStatus">
-                    <option value="🟢 В сети">🟢 В сети</option>
-                    <option value="🟡 Отошёл">🟡 Отошёл</option>
-                    <option value="🔴 Не беспокоить">🔴 Не беспокоить</option>
-                    <option value="🎮 В игре">🎮 В игре</option>
-                    <option value="🏆 Чемпион">🏆 Чемпион</option>
-                </select>
-            </div>
-            <div class="input-group"><label>Бейдж</label>
-                <select id="editBadge">
-                    <option value="🏅">🏅 Спортсмен</option>
-                    <option value="👑">👑 Король</option>
-                    <option value="🚀">🚀 Ракета</option>
-                    <option value="💎">💎 Алмаз</option>
-                    <option value="🔥">🔥 Огонь</option>
-                    <option value="⭐">⭐ Звезда</option>
-                </select>
-            </div>
-            <div class="modal-actions">
-                <button class="cancel-btn" onclick="App.closeModal('profileModal')">Отмена</button>
-                <button class="save-btn" onclick="App.saveProfile()">Сохранить</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="statusModal">
-        <div class="modal-content">
-            <h3>🟢 Статус</h3>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-                <div class="settings-item" onclick="App.setStatus('🟢 В сети')">🟢 В сети</div>
-                <div class="settings-item" onclick="App.setStatus('🟡 Отошёл')">🟡 Отошёл</div>
-                <div class="settings-item" onclick="App.setStatus('🔴 Не беспокоить')">🔴 Не беспокоить</div>
-                <div class="settings-item" onclick="App.setStatus('🎮 В игре')">🎮 В игре</div>
-                <div class="settings-item" onclick="App.setStatus('🏆 Чемпион')">🏆 Чемпион</div>
-            </div>
-            <div class="modal-actions"><button class="cancel-btn" onclick="App.closeModal('statusModal')">Закрыть</button></div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="bgModal">
-        <div class="modal-content">
-            <h3>🖼️ Выберите фон</h3>
-            <div class="bg-options">
-                <div class="bg-option-btn active" data-bg="dark" onclick="App.setBg('dark')">
-                    <span class="preview dark"></span>Тёмный
+            if (user.photo_url) {
+                document.getElementById('userAvatar').innerHTML = 
+                    `<img src="${user.photo_url}" alt="avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+            }
+            
+            document.getElementById('authOverlay').classList.remove('show');
+            this.showNotification('✅', 'Добро пожаловать!', 'Вы вошли через Telegram');
+            this.loadUserData();
+            this.updateUI();
+            playSound('bonus');
+            
+        } catch (e) {
+            this.telegramUser = {
+                id: 123456,
+                first_name: 'Демо',
+                last_name: 'Игрок',
+                username: 'demo_player',
+                photo_url: null
+            };
+            this.user_id = 123456;
+            this.user.name = 'Демо Игрок';
+            document.getElementById('welcomeName').textContent = '👋 Привет, ' + this.user.name + '!';
+            document.getElementById('authOverlay').classList.remove('show');
+            this.showNotification('ℹ️', 'Демо-режим', 'Telegram WebApp не обнаружен');
+            this.loadUserData();
+            this.updateUI();
+        }
+    },
+    
+    // ============================================================
+    //  ЗАГРУЗКА ДАННЫХ С БЭКЕНДА
+    // ============================================================
+    async loadUserData() {
+        try {
+            const response = await fetch(`${this.apiBase}/api/user/${this.user_id}`);
+            const data = await response.json();
+            
+            if (data.ok) {
+                this.balance = data.user.balance / 100;
+                this.totalGames = data.user.total_games;
+                this.wins = data.user.wins;
+                this.gifts = data.user.gifts;
+                this.isPremium = data.user.is_premium;
+                this.user.badge = data.user.badge;
+                this.user.status = data.user.status;
+            } else {
+                await this.createUser();
+            }
+        } catch (error) {
+            console.log('ℹ️ Бэкенд не доступен, используем локальные данные');
+            this.balance = 1;
+        }
+        this.updateUI();
+    },
+    
+    async createUser() {
+        try {
+            await fetch(`${this.apiBase}/api/user/${this.user_id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: this.telegramUser?.username || '',
+                    first_name: this.telegramUser?.first_name || '',
+                    last_name: this.telegramUser?.last_name || ''
+                })
+            });
+            this.balance = 0;
+        } catch (error) {
+            console.log('ℹ️ Ошибка создания пользователя');
+        }
+    },
+    
+    // ============================================================
+    //  БАЛАНС
+    // ============================================================
+    async addBalance(amount) {
+        try {
+            const response = await fetch(`${this.apiBase}/api/balance/add`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: this.user_id,
+                    amount: Math.round(amount * 100)
+                })
+            });
+            const data = await response.json();
+            this.balance = data.balance / 100;
+            this.showNotification('💎', `+${amount.toFixed(2)} TON`, 'Баланс пополнен');
+            playSound('bonus');
+            this.updateUI();
+        } catch (error) {
+            this.showNotification('❌', 'Ошибка', 'Не удалось обновить баланс');
+        }
+    },
+    
+    // ============================================================
+    //  ПОКУПКА
+    // ============================================================
+    buyItem(category, itemId) {
+        const item = this.shopItems[category]?.find(i => i.id === itemId);
+        if (!item) return;
+        
+        if (this.balance < item.price) {
+            this.showNotification('❌', 'Недостаточно TON', 'Пополните баланс');
+            return;
+        }
+        
+        this.balance -= item.price;
+        this.showNotification('🎉', 'Покупка успешна!', `${item.title} куплен`);
+        playSound('bonus');
+        this.updateUI();
+        this.renderShopItems(this.currentShopTab);
+        this.savePurchase(item);
+    },
+    
+    async savePurchase(item) {
+        try {
+            await fetch(`${this.apiBase}/api/purchase`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: this.user_id,
+                    item_id: item.id,
+                    category: this.currentShopTab,
+                    price: Math.round(item.price * 100)
+                })
+            });
+        } catch (error) {
+            console.log('ℹ️ Ошибка сохранения покупки');
+        }
+    },
+    
+    // ============================================================
+    //  TON ПОПОЛНЕНИЕ
+    // ============================================================
+    async connectWallet() {
+        try {
+            if (this.walletConnected) {
+                this.showNotification('ℹ️', 'Кошелёк уже подключён', this.walletAddress);
+                return;
+            }
+            
+            const connector = new TonConnect();
+            const wallet = await connector.connect({
+                manifestUrl: 'https://derevcov1307-bot.github.io/giftmarket-demo/tonconnect-manifest.json'
+            });
+            
+            this.walletAddress = wallet.account.address;
+            this.walletConnected = true;
+            
+            document.getElementById('walletStatus').textContent = '✅ Подключён';
+            document.getElementById('walletAddress').textContent = this.walletAddress.slice(0, 6) + '...' + this.walletAddress.slice(-4);
+            
+            this.showNotification('✅', 'Кошелёк подключён!', this.walletAddress.slice(0, 6) + '...' + this.walletAddress.slice(-4));
+            playSound('bonus');
+            
+            localStorage.setItem('walletAddress', this.walletAddress);
+            localStorage.setItem('walletConnected', 'true');
+            
+            this.renderShopItems(this.currentShopTab);
+            
+        } catch (error) {
+            console.error('Ошибка подключения кошелька:', error);
+            this.showNotification('❌', 'Ошибка подключения', 'Попробуйте позже');
+        }
+    },
+    
+    async depositTON(item) {
+        if (!this.walletConnected) {
+            this.showNotification('⚠️', 'Подключите кошелёк', 'Сначала подключите TON кошелёк в настройках');
+            return;
+        }
+        
+        this.showNotification('💎', 'Оплата TON', `Отправьте ${item.price} TON на адрес:`);
+        this.showNotification('📋', 'Адрес', this.walletAddress);
+        this.showNotification('⏳', 'Ожидание...', 'После оплаты баланс пополнится автоматически');
+        
+        setTimeout(async () => {
+            try {
+                const response = await fetch(`${this.apiBase}/api/balance/add`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: this.user_id,
+                        amount: Math.round(item.amount * 100)
+                    })
+                });
+                const data = await response.json();
+                this.balance = data.balance / 100;
+                this.showNotification('🎉', 'Пополнение успешно!', `+${item.amount} TON`);
+                playSound('bonus');
+                this.updateUI();
+                this.renderShopItems(this.currentShopTab);
+            } catch (error) {
+                this.showNotification('❌', 'Ошибка', 'Не удалось пополнить баланс');
+            }
+        }, 3000);
+    },
+    
+    loadWallet() {
+        const address = localStorage.getItem('walletAddress');
+        const connected = localStorage.getItem('walletConnected') === 'true';
+        
+        if (address && connected) {
+            this.walletAddress = address;
+            this.walletConnected = true;
+            
+            document.getElementById('walletStatus').textContent = '✅ Подключён';
+            document.getElementById('walletAddress').textContent = address.slice(0, 6) + '...' + address.slice(-4);
+        }
+    },
+    
+    // ============================================================
+    //  ОБНОВЛЕНИЕ UI
+    // ============================================================
+    updateUI() {
+        document.getElementById('userBalance').textContent = this.balance.toFixed(2);
+        document.getElementById('winsCount').textContent = this.wins;
+        document.getElementById('totalGames').textContent = this.totalGames;
+        document.getElementById('giftsCount').textContent = this.gifts;
+        document.getElementById('userName').textContent = this.user.name;
+        document.getElementById('userSub').textContent = this.user.status;
+        document.getElementById('profileBadge').textContent = this.user.badge;
+        document.getElementById('statusDisplay').textContent = this.user.status;
+    },
+    
+    // ============================================================
+    //  СТРАНИЦЫ
+    // ============================================================
+    showPage(page) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        const target = document.getElementById(`page-${page}`);
+        if (target) target.classList.add('active');
+        
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        const map = { home: 0, shop: 1, market: 2, games: 3, profile: 4 };
+        if (map[page] !== undefined) {
+            const items = document.querySelectorAll('.nav-item');
+            if (items[map[page]]) items[map[page]].classList.add('active');
+        }
+        
+        if (page === 'shop') {
+            this.renderShopItems(this.currentShopTab);
+        }
+        if (page === 'market') {
+            this.renderMarket();
+        }
+        
+        if (typeof lucide !== 'undefined') {
+            setTimeout(() => lucide.createIcons(), 50);
+        }
+    },
+    
+    goHome() { this.showPage('home'); },
+    openProfileModal() { openProfileModal(this); },
+    saveProfile() { saveProfile(this); },
+    openStatusModal() { openStatusModal(this); },
+    setStatus(status) { setStatus(this, status); },
+    closeModal(id) { closeModal(id); },
+    showAbout() { showAbout(); },
+    showBalance() { this.showNotification('💰', 'Баланс', `${this.balance.toFixed(2)} TON`); },
+    openBgModal() { openBgModal(); },
+    
+    // ============================================================
+    //  МАГАЗИН
+    // ============================================================
+    switchShopTab(tab) {
+        this.currentShopTab = tab;
+        document.querySelectorAll('.shop-tab').forEach(t => {
+            t.classList.toggle('active', t.dataset.tab === tab);
+        });
+        if (tab === 'market') {
+            this.renderMarket();
+        } else {
+            this.renderShopItems(tab);
+        }
+        playSound('click');
+    },
+    
+    renderShopItems(tab) {
+        const grid = document.getElementById('shopGrid');
+        if (!grid) return;
+        
+        const items = this.shopItems[tab] || [];
+        
+        grid.innerHTML = items.map(item => {
+            let iconHtml = '';
+            if (tab === 'deposit') {
+                iconHtml = `<div class="shop-icon">💎</div>`;
+            } else {
+                iconHtml = `<div class="shop-icon">${item.icon}</div>`;
+            }
+            
+            const isDeposit = tab === 'deposit';
+            
+            return `
+                <div class="shop-item" onclick="${isDeposit ? '' : `App.buyItem('${tab}', '${item.id}')`}">
+                    ${iconHtml}
+                    <div class="shop-info">
+                        <div class="shop-title">${item.title}</div>
+                        <div class="shop-desc">${item.desc}</div>
+                        <div class="shop-price">${item.price.toFixed(2)} TON</div>
+                    </div>
+                    ${item.tag ? `<span class="shop-tag hot">${item.tag}</span>` : ''}
+                    <button class="shop-btn" ${isDeposit && !App.walletConnected ? 'disabled' : ''} onclick="${isDeposit ? `App.depositTON(item)` : ''}">
+                        ${isDeposit ? (!App.walletConnected ? '🔒 Подключите кошелёк' : '💳 Пополнить') : 'Купить'}
+                    </button>
                 </div>
-                <div class="bg-option-btn" data-bg="gradient" onclick="App.setBg('gradient')">
-                    <span class="preview gradient"></span>Градиент
+            `;
+        }).join('');
+        
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    },
+    
+    renderMarket() {
+        const grid = document.getElementById('marketGrid');
+        if (!grid) return;
+        
+        const items = this.shopItems.market || [];
+        const filtered = this.currentFilter === 'all' 
+            ? items 
+            : items.filter(item => item.rarity === this.currentFilter);
+        
+        grid.innerHTML = filtered.map(item => `
+            <div class="market-card" onclick="App.buyItem('market', '${item.id}')">
+                <div class="nft-image">
+                    <img src="${item.icon}" alt="${item.title}">
                 </div>
-                <div class="bg-option-btn" data-bg="particles" onclick="App.setBg('particles')">
-                    <span class="preview particles"></span>Частицы
+                <div class="nft-name">${item.title}</div>
+                <div class="nft-price">${item.price.toFixed(2)} TON</div>
+                <span class="nft-rarity ${item.rarity}">${item.rarity.toUpperCase()}</span>
+                <div class="nft-id">${item.number}</div>
+                <button class="buy-btn">Купить</button>
+            </div>
+        `).join('');
+    },
+    
+    // ============================================================
+    //  NFT КОЛЛЕКЦИЯ
+    // ============================================================
+    showNftCollection() {
+        this.showPage('nft');
+        this.renderNftCollection();
+    },
+    
+    renderNftCollection() {
+        const container = document.getElementById('nftCollection');
+        const empty = document.getElementById('nftEmpty');
+        if (!container) return;
+        
+        const collection = JSON.parse(localStorage.getItem('nftCollection') || '[]');
+        const allNft = this.shopItems.market || [];
+        const userNft = allNft.filter(item => collection.includes(item.id));
+        
+        if (userNft.length === 0) {
+            container.innerHTML = '';
+            if (empty) empty.style.display = 'block';
+            return;
+        }
+        
+        if (empty) empty.style.display = 'none';
+        container.innerHTML = userNft.map(nft => `
+            <div class="nft-card">
+                <div class="nft-image">
+                    <img src="${nft.icon}" alt="${nft.title}">
+                </div>
+                <div class="nft-name">${nft.title}</div>
+                <div class="nft-price">${nft.price.toFixed(2)} TON</div>
+                <div class="nft-badges">
+                    <span class="nft-badge nft">NFT</span>
+                    <span class="nft-badge ${nft.rarity}">${nft.rarity.toUpperCase()}</span>
                 </div>
             </div>
-            <div class="modal-actions"><button class="cancel-btn" onclick="App.closeModal('bgModal')">Закрыть</button></div>
-        </div>
-    </div>
+        `).join('');
+    },
+    
+    // ============================================================
+    //  ИГРЫ
+    // ============================================================
+    renderGames() {
+        const list = document.getElementById('gamesList');
+        if (!list) return;
+        
+        list.innerHTML = this.games.map(g => `
+            <div class="settings-item" onclick="App.openGame('${g.id}')" style="cursor:pointer;">
+                <div class="left">
+                    <div class="game-icon-wrapper">
+                        <img src="${g.icon}" alt="${g.title}" loading="lazy">
+                    </div>
+                    <div class="info">
+                        <div class="title">${g.title}</div>
+                        <div class="desc">${g.desc}</div>
+                    </div>
+                </div>
+                <div class="right">${g.status} →</div>
+            </div>
+        `).join('');
+    },
+    
+    openGame(gameId) {
+        const game = this.games.find(g => g.id === gameId);
+        if (!game) return;
+        const content = document.getElementById('gameContent');
+        if (!content) return;
+        switch(gameId) {
+            case 'plinko': content.innerHTML = renderPlinko(); break;
+            case 'coinflip': content.innerHTML = renderCoinFlip(); break;
+            case 'crash': content.innerHTML = renderCrash(); break;
+        }
+        this.showPage('game');
+        playSound('click');
+        
+        if (typeof lucide !== 'undefined') {
+            setTimeout(() => lucide.createIcons(), 100);
+        }
+    },
+    
+    // ============================================================
+    //  МЕТОДЫ ДЛЯ ИГР
+    // ============================================================
+    async saveGameResult(gameType, bet, winAmount, multiplier, result) {
+        try {
+            await fetch(`${this.apiBase}/api/history`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: this.user_id,
+                    game_type: gameType,
+                    bet: Math.round(bet * 100),
+                    win_amount: Math.round(winAmount * 100),
+                    multiplier: multiplier,
+                    result: result
+                })
+            });
+        } catch (error) {
+            console.log('ℹ️ Ошибка сохранения истории');
+        }
+    },
+    
+    playPlinko() { playPlinko(this); },
+    coinFlip(choice) { coinFlip(this, choice); },
+    startCrash() { startCrash(this); },
+    crashAction() { crashAction(this); },
+    
+    // ============================================================
+    //  ИНИЦИАЛИЗАЦИЯ
+    // ============================================================
+    init() {
+        loadTheme(this);
+        loadBg(this);
+        this.loadWallet();
+        this.renderGames();
+        renderAchievements(this);
+        this.renderShopItems('bonus');
+        this.updateUI();
+        
+        if (window.Telegram && window.Telegram.WebApp) {
+            setTimeout(() => this.authViaTelegram(), 500);
+        } else {
+            document.getElementById('authOverlay').classList.add('show');
+        }
+        
+        if (typeof lucide !== 'undefined') {
+            setTimeout(() => lucide.createIcons(), 200);
+        }
+        
+        setInterval(() => {
+            const el = document.getElementById('onlinePlayers');
+            const current = parseInt(el.textContent.replace(/,/g, ''));
+            el.textContent = Math.max(100, current + Math.floor(Math.random() * 20) - 5).toLocaleString();
+        }, 4000);
+        
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const page = this.dataset.page;
+                App.showPage(page);
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                this.classList.add('active');
+                playSound('click');
+            });
+        });
+        
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.show').forEach(m => m.classList.remove('show'));
+            }
+        });
+        
+        document.querySelectorAll('.modal-overlay').forEach(m => {
+            m.addEventListener('click', function(e) {
+                if (e.target === this) this.classList.remove('show');
+            });
+        });
+        
+        console.log('🎮 GiftArcade v3.1 — TON Пополнение!');
+        console.log('💎 Валюта: TON');
+        console.log('💳 Пополнение через TON Connect');
+    }
+};
 
-    <!-- JAVASCRIPT -->
-    <script src="js/services/achievements.js"></script>
-    <script src="js/services/balance.js"></script>
-    <script src="js/services/notifications.js"></script>
-    <script src="js/services/profile.js"></script>
-    <script src="js/services/theme.js"></script>
-    <script src="js/games/plinko.js"></script>
-    <script src="js/games/coinflip.js"></script>
-    <script src="js/games/crash.js"></script>
-    <script src="js/games/nft.js"></script>
-    <script src="js/app.js"></script>
-</body>
-</html>
+document.addEventListener('DOMContentLoaded', () => App.init());
