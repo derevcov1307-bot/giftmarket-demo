@@ -203,6 +203,9 @@
                 <button class="shop-tab" data-tab="nft" onclick="App.switchShopTab('nft')">
                     <i data-lucide="diamond" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i> NFT
                 </button>
+                <button class="shop-tab" data-tab="market" onclick="App.switchShopTab('market')">
+                    <i data-lucide="store" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i> Маркет
+                </button>
             </div>
 
             <div class="shop-grid" id="shopGrid"></div>
@@ -249,6 +252,16 @@
                     </div>
                     <div class="right">→</div>
                 </div>
+                <div class="settings-item" onclick="App.showNftCollection()">
+                    <div class="left">
+                        <span class="icon"><i data-lucide="diamond" style="width:20px;height:20px;"></i></span>
+                        <div class="info">
+                            <div class="title">Мои NFT</div>
+                            <div class="desc">Коллекция NFT-подарков</div>
+                        </div>
+                    </div>
+                    <div class="right">→</div>
+                </div>
             </div>
 
             <div class="settings-group">
@@ -288,6 +301,47 @@
             </div>
         </div>
 
+        <!-- ===== СТРАНИЦА: NFT КОЛЛЕКЦИЯ ===== -->
+        <div class="page" id="page-nft">
+            <button class="back-btn" onclick="App.goHome()" style="margin-bottom:12px;">
+                <i data-lucide="arrow-left" style="width:18px;height:18px;display:inline-block;vertical-align:middle;"></i> Назад
+            </button>
+            <div style="padding:8px 0 12px 0;">
+                <div style="font-size:22px;font-weight:700;">
+                    <i data-lucide="diamond" style="width:24px;height:24px;display:inline-block;vertical-align:middle;"></i> Мои NFT
+                </div>
+                <div style="font-size:13px;color:var(--text-secondary);">Твоя коллекция NFT-подарков</div>
+            </div>
+            <div id="nftCollection" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:8px 0;">
+                <!-- Генерируется JS -->
+            </div>
+            <div style="text-align:center;padding:20px 0;color:var(--text-secondary);font-size:13px;" id="nftEmpty">
+                У тебя пока нет NFT-подарков. Купи их в магазине!
+            </div>
+        </div>
+
+        <!-- ===== СТРАНИЦА: МАРКЕТ NFT ===== -->
+        <div class="page" id="page-market">
+            <div style="padding:8px 0 12px 0;">
+                <div style="font-size:22px;font-weight:700;">
+                    <i data-lucide="store" style="width:24px;height:24px;display:inline-block;vertical-align:middle;"></i> Маркет NFT
+                </div>
+                <div style="font-size:13px;color:var(--text-secondary);">Покупай и продавай NFT-подарки</div>
+            </div>
+            
+            <!-- Фильтры -->
+            <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px;">
+                <button class="filter-btn active" data-filter="all" onclick="App.filterMarket('all')">Все</button>
+                <button class="filter-btn" data-filter="rare" onclick="App.filterMarket('rare')">🔥 Редкие</button>
+                <button class="filter-btn" data-filter="epic" onclick="App.filterMarket('epic')">💎 Эпик</button>
+                <button class="filter-btn" data-filter="legendary" onclick="App.filterMarket('legendary')">👑 Легендарные</button>
+            </div>
+            
+            <div id="marketGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:8px 0;">
+                <!-- Генерируется JS -->
+            </div>
+        </div>
+
         <!-- ===== СТРАНИЦА: ИГРА ===== -->
         <div class="page" id="page-game">
             <button class="back-btn" onclick="App.goHome()" style="margin-bottom:12px;">
@@ -305,6 +359,10 @@
             <button class="nav-item" data-page="shop">
                 <i data-lucide="shopping-bag" class="nav-icon"></i>
                 <span class="nav-label">Магазин</span>
+            </button>
+            <button class="nav-item" data-page="market">
+                <i data-lucide="store" class="nav-icon"></i>
+                <span class="nav-label">Маркет</span>
             </button>
             <button class="nav-item" data-page="games">
                 <i data-lucide="gamepad-2" class="nav-icon"></i>
@@ -325,7 +383,7 @@
             <div class="input-group"><label>Статус</label>
                 <select id="editStatus">
                     <option value="🟢 В сети">🟢 В сети</option>
-                    <option value="🟡 Отошёл">🟡 Отошёл</option>
+                    <option value="🟡 Отошёл">🟡 Отошѣл</option>
                     <option value="🔴 Не беспокоить">🔴 Не беспокоить</option>
                     <option value="🎮 В игре">🎮 В игре</option>
                     <option value="🏆 Чемпион">🏆 Чемпион</option>
