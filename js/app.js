@@ -1,5 +1,5 @@
 // ============================================================
-//  ГЛАВНОЕ ПРИЛОЖЕНИЕ (App) — МАКСИМАЛЬНЫЙ ВИЗУАЛ
+//  ГЛАВНОЕ ПРИЛОЖЕНИЕ (App) — КЕЙСЫ С КАРТИНКАМИ
 // ============================================================
 const App = {
     // СОСТОЯНИЕ
@@ -74,9 +74,32 @@ const App = {
             { id: 'g6', title: '🎁 Подарочная коробка', desc: 'Сюрприз внутри!', icon: '🎁', price: 20 }
         ],
         cases: [
-            { id: 'c1', title: '📦 Обычный кейс', desc: 'Призы: x1, x2, x5', icon: '📦', price: 10, rewards: [1, 2, 5] },
-            { id: 'c2', title: '🎁 Редкий кейс', desc: 'Призы: x5, x10, x25', icon: '🎁', price: 30, rewards: [5, 10, 25], tag: '🔥' },
-            { id: 'c3', title: '💎 Легендарный кейс', desc: 'Призы: x25, x50, x100', icon: '💎', price: 80, rewards: [25, 50, 100], tag: '🔥' }
+            { 
+                id: 'c1', 
+                title: '📦 Обычный кейс', 
+                desc: 'Призы: x1, x2, x5', 
+                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417118.png',
+                price: 10, 
+                rewards: [1, 2, 5] 
+            },
+            { 
+                id: 'c2', 
+                title: '🎁 Редкий кейс', 
+                desc: 'Призы: x5, x10, x25', 
+                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417085.png',
+                price: 30, 
+                rewards: [5, 10, 25], 
+                tag: '🔥' 
+            },
+            { 
+                id: 'c3', 
+                title: '💎 Легендарный кейс', 
+                desc: 'Призы: x25, x50, x100', 
+                icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417074.png',
+                price: 80, 
+                rewards: [25, 50, 100], 
+                tag: '🔥' 
+            }
         ]
     },
     
@@ -192,20 +215,34 @@ const App = {
             `;
         }
         
-        grid.innerHTML = recipientInput + items.map(item => `
-            <div class="shop-item ${tab === 'gifts' ? 'gift-item' : ''}" onclick="App.buyItem('${tab}', '${item.id}')">
-                <div class="shop-icon">${item.icon}</div>
-                <div class="shop-info">
-                    <div class="shop-title">${item.title}</div>
-                    <div class="shop-desc">${item.desc}</div>
-                    <div class="shop-price">${item.price} ⭐</div>
+        grid.innerHTML = recipientInput + items.map(item => {
+            // Определяем, что показывать в иконке
+            let iconHtml = '';
+            if (tab === 'cases') {
+                iconHtml = `
+                    <div class="case-preview">
+                        <img src="${item.icon}" alt="${item.title}" loading="lazy">
+                    </div>
+                `;
+            } else {
+                iconHtml = `<div class="shop-icon">${item.icon}</div>`;
+            }
+            
+            return `
+                <div class="shop-item ${tab === 'gifts' ? 'gift-item' : ''}" onclick="App.buyItem('${tab}', '${item.id}')">
+                    ${iconHtml}
+                    <div class="shop-info">
+                        <div class="shop-title">${item.title}</div>
+                        <div class="shop-desc">${item.desc}</div>
+                        <div class="shop-price">${item.price} ⭐</div>
+                    </div>
+                    ${item.tag ? `<span class="shop-tag hot">${item.tag}</span>` : ''}
+                    <button class="shop-btn" ${isOwned(item) ? 'disabled' : ''}>
+                        ${isOwned(item) ? '✅ Куплено' : tab === 'gifts' ? '📤 Отправить' : tab === 'cases' ? '🎲 Открыть' : 'Купить'}
+                    </button>
                 </div>
-                ${item.tag ? `<span class="shop-tag hot">${item.tag}</span>` : ''}
-                <button class="shop-btn" ${isOwned(item) ? 'disabled' : ''}>
-                    ${isOwned(item) ? '✅ Куплено' : tab === 'gifts' ? '📤 Отправить' : tab === 'cases' ? '🎲 Открыть' : 'Купить'}
-                </button>
-            </div>
-        `).join('');
+            `;
+        }).join('');
         
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
