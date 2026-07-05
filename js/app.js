@@ -206,4 +206,511 @@ const App = {
             this.updateUI();
             return true;
         } else {
-            this.showNotification('⏳', 'Уже получали', 'Воз
+            this.showNotification('⏳', 'Уже получали', 'Возвращайтесь завтра!');
+            return false;
+        }
+    },
+    
+    canGetBonus() {
+        const today = new Date().toDateString();
+        const lastBonus = localStorage.getItem('lastBonus');
+        return lastBonus !== today;
+    },
+    
+    // ============================================================
+    //  МАГАЗИН
+    // ============================================================
+    switchShopTab(tab) {
+        this.currentShopTab = tab;
+        document.querySelectorAll('.shop-tab').forEach(t => {
+            t.classList.toggle('active', t.dataset.tab === tab);
+        });
+        this.renderShopItems(tab);
+        playSound('click');
+    },
+    
+    renderShopItems(tab) {
+        const grid = document.getElementById('shopGrid');
+        if (!grid) return;
+        
+        const items = this.shopItems[tab] || [];
+        const isOwned = (item) => {
+            if (tab === 'badges') return this.purchasedBadges.includes(item.id);
+            if (tab === 'premium') return this.isPremium && item.id === 'p1';
+            return false;
+        };
+        
+        let recipientInput = '';
+        if (tab === 'gifts') {
+            recipientInput = `
+                <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+                    <div class="gift-recipient" style="flex:1;margin-bottom:0;">
+                        <label>👤 Получатель (Telegram ID)</label>
+                        <input type="text" id="giftRecipient" placeholder="Введите Telegram ID получателя">
+                    </div>
+                    <button onclick="App.refreshGifts()" style="padding:8px 14px;border-radius:10px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);cursor:pointer;font-size:13px;margin-top:16px;transition:var(--transition-bounce);white-space:nowrap;">
+                        <i data-lucide="refresh-cw" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i>
+                    </button>
+                </div>
+            `;
+        }
+        
+        grid.innerHTML = recipientInput + items.map(item => {
+            // Определяем, что показывать в иконке
+            let iconHtml = '';
+            if (tab === 'cases') {
+                iconHtml = `
+                    <div class="case-preview">
+                        <img src="${item.icon}" alt="${item.title}" loading="lazy">
+                    </div>
+                `;
+            } else if (tab === 'nft') {
+                iconHtml = `
+                    <div class="nft-preview">
+                        <img src="${item.icon}" alt="${item.title}" loading="lazy">
+                    </div>
+                `;
+            } else {
+                iconHtml = `<div class="shop-icon">${item.icon}</div>`;
+            }
+            
+            return `
+                <div class="shop-item ${tab === 'gifts' ? 'gift-item' : ''}" onclick="App.buyItem('${tab}', '${item.id}')">
+                    ${iconHtml}
+                    <div class="shop-info">
+                        <div class="shop-title">${item.title}</div>
+                        <div class="shop-desc">${item.desc}</div>
+                        <div class="shop-price">${item.price} ⭐</div>
+                    </div>
+                    ${item.tag ? `<span class="shop-tag hot">${item.tag}</span>` : ''}
+                    <button class="shop-btn" ${isOwned(item) ? 'disabled' : ''}>
+                        ${isOwned(item) ? '✅ Куплено' : tab === 'gifts' ? '📤 Отправить' : tab === 'cases' ? '🎲 Открыть' : tab === 'nft' ? '🎨 Купить NFT' : 'Купить'}
+                    </button>
+                </div>
+            `;
+        }).join('');
+        
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    },
+    
+    buyItem(category, itemId) {
+        const item = this.shopItems[category]?.find(i => i.id === itemId);
+        if (!item) return;
+        
+        // Кейсы
+        if (category === 'cases') {
+            this.openCase(category, itemId);
+            return;
+        }
+        
+        // NFT
+        if (category === 'nft') {
+            this.buyNft(item);
+            return;
+        }
+        
+        // Подарки
+        if (category === 'gifts') {
+            const recipient = document.getElementById('giftRecipient')?.value.trim();
+            if (!recipient) {
+                this.showNotification('⚠️', 'Укажите получателя', 'Введите Telegram ID пользователя');
+                return;
+            }
+            if (this.balance < item.price) {
+                this.showNotification('❌', 'Недостаточно звёзд', 'Пополните баланс в магазине');
+                return;
+            }
+            this.sendGift(item, recipient);
+            return;
+        }
+        
+        if (window.Telegram && window.Telegram.WebApp) {
+            try {
+                const tg = window.Telegram.WebApp;
+                tg.openInvoice({
+                    title: item.title,
+                    description: item.desc,
+                    payload: JSON.stringify({ 
+                        itemId: item.id, 
+                        category: category,
+                        amount: item.amount || 0 
+                    }),
+                    provider_token: '',
+                    currency: 'XTR',
+                    prices: [{ label: item.title, amount: item.price }]
+                });
+                this.showNotification('💫', 'Запрос отправлен', 'Ожидайте подтверждение');
+                return;
+            } catch (e) {}
+        }
+        
+        if (confirm(`Купить "${item.title}" за ${item.price}⭐? (ДЕМО)`)) {
+            this.processPurchase(category, itemId, item);
+        }
+    },
+    
+    // ============================================================
+    //  КЕЙСЫ
+    // ============================================================
+    openCase(category, itemId) {
+        const item = this.shopItems[category]?.find(i => i.id === itemId);
+        if (!item) return;
+        
+        if (this.balance < item.price) {
+            this.showNotification('❌', 'Недостаточно звёзд', 'Пополните баланс');
+            return;
+        }
+        
+        this.balance -= item.price;
+        const reward = item.rewards[Math.floor(Math.random() * item.rewards.length)];
+        this.balance += reward;
+        this.totalGames++;
+        this.showNotification('🎉', 'Кейс открыт!', `Вы выиграли: +${reward}⭐`);
+        playSound('win');
+        this.updateUI();
+        this.renderShopItems(this.currentShopTab);
+    },
+    
+    // ============================================================
+    //  ПОКУПКА NFT
+    // ============================================================
+    buyNft(item) {
+        if (this.balance < item.price) {
+            this.showNotification('❌', 'Недостаточно звёзд', 'Пополните баланс');
+            return;
+        }
+        
+        // В демо-режиме просто списываем звёзды и показываем уведомление
+        this.balance -= item.price;
+        this.showNotification('🎨', 'NFT куплен!', `${item.title} добавлен в коллекцию`);
+        playSound('bonus');
+        this.updateUI();
+        this.renderShopItems(this.currentShopTab);
+        
+        // В реальном приложении здесь будет вызов Telegram API:
+        // await sendNft(this, item);
+    },
+    
+    // ============================================================
+    //  NFT КОЛЛЕКЦИЯ
+    // ============================================================
+    showNftCollection() {
+        this.showPage('nft');
+        this.renderNftCollection();
+    },
+    
+    renderNftCollection() {
+        const container = document.getElementById('nftCollection');
+        const empty = document.getElementById('nftEmpty');
+        if (!container) return;
+        
+        // В демо-режиме показываем купленные NFT
+        // В реальном приложении — запрос к бэкенду
+        const nftList = [
+            { id: 'nft1', title: '🎨 Космический кот', icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417118.png', price: 50 },
+            { id: 'nft3', title: '🌌 Галактика', icon: 'https://cdn-icons-png.flaticon.com/512/10417/10417074.png', price: 80 }
+        ];
+        
+        if (nftList.length === 0) {
+            container.innerHTML = '';
+            empty.style.display = 'block';
+            return;
+        }
+        
+        empty.style.display = 'none';
+        container.innerHTML = nftList.map(nft => `
+            <div class="nft-card" style="background:var(--bg-card);border-radius:var(--radius);border:1px solid var(--border-color);padding:16px;text-align:center;transition:var(--transition-bounce);backdrop-filter:blur(10px);">
+                <div style="width:80px;height:80px;border-radius:12px;overflow:hidden;margin:0 auto;border:2px solid var(--neon-gold);box-shadow:0 0 20px rgba(255,215,0,0.1);">
+                    <img src="${nft.icon}" alt="${nft.title}" style="width:100%;height:100%;object-fit:cover;">
+                </div>
+                <div style="margin-top:8px;font-weight:600;font-size:14px;">${nft.title}</div>
+                <div style="font-size:11px;color:var(--text-secondary);">⭐ ${nft.price}</div>
+                <div style="margin-top:8px;display:flex;gap:6px;justify-content:center;">
+                    <span style="font-size:10px;padding:2px 10px;border-radius:100px;background:linear-gradient(135deg,#a855f7,#6d28d9);color:#fff;font-weight:600;">NFT</span>
+                    <span style="font-size:10px;padding:2px 10px;border-radius:100px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);">Редкий</span>
+                </div>
+            </div>
+        `).join('');
+    },
+    
+    // ============================================================
+    //  ОТПРАВКА ПОДАРКА
+    // ============================================================
+    async sendGift(item, recipient) {
+        if (this.balance < item.price) {
+            this.showNotification('❌', 'Недостаточно звёзд', 'Пополните баланс');
+            return;
+        }
+        
+        const user_id = this.telegramUser?.id || 123456;
+        
+        try {
+            const response = await fetch('http://localhost:5000/api/gifts/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: user_id,
+                    gift_id: item.id,
+                    recipient_id: parseInt(recipient),
+                    text: `🎁 Подарок от ${this.user.name}!`
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.ok) {
+                this.balance = data.new_balance;
+                this.gifts++;
+                this.showNotification('🎁', 'Подарок отправлен!', `Пользователю ${recipient}`);
+                playSound('bonus');
+                this.updateUI();
+                this.renderShopItems(this.currentShopTab);
+            } else {
+                this.showNotification('❌', 'Ошибка', data.error || 'Не удалось отправить подарок');
+            }
+        } catch (error) {
+            console.error('Ошибка отправки подарка:', error);
+            if (this.balance >= item.price) {
+                this.balance -= item.price;
+                this.gifts++;
+                this.showNotification('🎁', 'Подарок отправлен (ДЕМО)', `Пользователю ${recipient}`);
+                playSound('bonus');
+                this.updateUI();
+                this.renderShopItems(this.currentShopTab);
+            }
+        }
+    },
+    
+    // ============================================================
+    //  ПОЛУЧЕНИЕ ПОДАРКОВ ИЗ TELEGRAM
+    // ============================================================
+    async fetchTelegramGifts() {
+        try {
+            const response = await fetch('http://localhost:5000/api/gifts/available');
+            const data = await response.json();
+            
+            if (data.ok && data.gifts.length > 0) {
+                const telegramGifts = data.gifts.map(g => ({
+                    id: g.id,
+                    title: g.title || '🎁 Подарок',
+                    desc: `Осталось: ${g.remaining_count || 0} из ${g.total_count || 0}`,
+                    icon: g.title || '🎁',
+                    price: g.price || 10,
+                    tag: g.remaining_count < 10 ? '🔥' : ''
+                }));
+                
+                this.shopItems.gifts = telegramGifts;
+                this.renderShopItems(this.currentShopTab);
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.log('ℹ️ Бэкенд не доступен, используем демо-подарки');
+            return false;
+        }
+    },
+    
+    async refreshGifts() {
+        this.showNotification('🔄', 'Обновление...', 'Загружаем список подарков');
+        await this.fetchTelegramGifts();
+        this.showNotification('✅', 'Готово!', 'Список подарков обновлён');
+    },
+    
+    // ============================================================
+    //  ОБРАБОТКА ПОКУПКИ
+    // ============================================================
+    processPurchase(category, itemId, item) {
+        if (this.balance < item.price) {
+            this.showNotification('❌', 'Недостаточно звёзд', 'Пополните баланс в магазине');
+            return;
+        }
+        
+        this.balance -= item.price;
+        playSound('click');
+        
+        switch(category) {
+            case 'stars':
+                this.balance += item.amount;
+                this.showNotification('🎉', `+${item.amount}⭐`, 'Баланс пополнен!');
+                playSound('bonus');
+                break;
+            case 'bonus':
+                if (item.id === 'b1') this.boosters.x2 += item.amount || 1;
+                if (item.id === 'b2') this.boosters.x3 += item.amount || 1;
+                if (item.id === 'b3') this.showNotification('🍀', 'Счастливый билет!', '+50% к удаче');
+                this.showNotification('🎁', `Куплен: ${item.title}`, 'Бонус активирован!');
+                break;
+            case 'badges':
+                if (!this.purchasedBadges.includes(itemId)) {
+                    this.purchasedBadges.push(itemId);
+                    this.showNotification('🏅', `Получен бейдж: ${item.title}`, 'Теперь он в твоём профиле!');
+                }
+                break;
+            case 'premium':
+                this.isPremium = true;
+                this.showNotification('👑', 'Премиум активирован!', 'x2 бонус ко всем выигрышам');
+                break;
+        }
+        
+        this.updateUI();
+        this.renderShopItems(this.currentShopTab);
+    },
+    
+    // ============================================================
+    //  МЕТОДЫ
+    // ============================================================
+    showNotification(icon, title, desc) { showNotification(icon, title, desc); },
+    toggleTheme() { toggleTheme(this); },
+    setBg(bg) { setBg(this, bg); },
+    
+    showPage(page) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        const target = document.getElementById(`page-${page}`);
+        if (target) target.classList.add('active');
+        
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        const map = { home: 0, shop: 1, games: 2, profile: 3, nft: 3 };
+        if (map[page] !== undefined) {
+            const items = document.querySelectorAll('.nav-item');
+            if (items[map[page]]) items[map[page]].classList.add('active');
+        }
+        
+        if (page === 'shop') {
+            this.renderShopItems(this.currentShopTab);
+        }
+        
+        if (typeof lucide !== 'undefined') {
+            setTimeout(() => lucide.createIcons(), 50);
+        }
+    },
+    
+    goHome() { this.showPage('home'); },
+    openProfileModal() { openProfileModal(this); },
+    saveProfile() { saveProfile(this); },
+    openStatusModal() { openStatusModal(this); },
+    setStatus(status) { setStatus(this, status); },
+    closeModal(id) { closeModal(id); },
+    showAbout() { showAbout(); },
+    addBalance(amount) { 
+        addBalance(this, amount);
+        playSound('bonus');
+    },
+    resetBalance() { resetBalance(this); },
+    showBalance() { showBalance(this); },
+    openBgModal() { openBgModal(); },
+    
+    // ============================================================
+    //  ИГРЫ
+    // ============================================================
+    renderGames() {
+        const list = document.getElementById('gamesList');
+        if (!list) return;
+        
+        list.innerHTML = this.games.map(g => `
+            <div class="settings-item" onclick="App.openGame('${g.id}')" style="cursor:pointer;">
+                <div class="left">
+                    <div class="game-icon-wrapper">
+                        <img src="${g.icon}" alt="${g.title}" loading="lazy">
+                    </div>
+                    <div class="info">
+                        <div class="title">${g.title}</div>
+                        <div class="desc">${g.desc}</div>
+                    </div>
+                </div>
+                <div class="right">${g.status} →</div>
+            </div>
+        `).join('');
+    },
+    
+    openGame(gameId) {
+        const game = this.games.find(g => g.id === gameId);
+        if (!game) return;
+        const content = document.getElementById('gameContent');
+        if (!content) return;
+        switch(gameId) {
+            case 'plinko': content.innerHTML = renderPlinko(); break;
+            case 'coinflip': content.innerHTML = renderCoinFlip(); break;
+            case 'crash': content.innerHTML = renderCrash(); break;
+        }
+        this.showPage('game');
+        playSound('click');
+        
+        if (typeof lucide !== 'undefined') {
+            setTimeout(() => lucide.createIcons(), 100);
+        }
+    },
+    
+    playPlinko() { playPlinko(this); },
+    coinFlip(choice) { coinFlip(this, choice); },
+    startCrash() { startCrash(this); },
+    crashAction() { crashAction(this); },
+    
+    // ============================================================
+    //  ИНИЦИАЛИЗАЦИЯ
+    // ============================================================
+    init() {
+        loadTheme(this);
+        loadBg(this);
+        this.renderGames();
+        renderAchievements(this);
+        this.renderShopItems('stars');
+        updateUI(this);
+        
+        if (window.Telegram && window.Telegram.WebApp) {
+            setTimeout(() => this.authViaTelegram(), 500);
+        } else {
+            document.getElementById('authOverlay').classList.add('show');
+        }
+        
+        setTimeout(() => {
+            this.fetchTelegramGifts();
+        }, 1000);
+        
+        if (typeof lucide !== 'undefined') {
+            setTimeout(() => lucide.createIcons(), 200);
+        }
+        
+        // Онлайн
+        setInterval(() => {
+            const el = document.getElementById('onlinePlayers');
+            const current = parseInt(el.textContent.replace(/,/g, ''));
+            el.textContent = Math.max(100, current + Math.floor(Math.random() * 20) - 5).toLocaleString();
+        }, 4000);
+        
+        // Навигация
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const page = this.dataset.page;
+                App.showPage(page);
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                this.classList.add('active');
+                playSound('click');
+            });
+        });
+        
+        // Закрытие модалок
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.show').forEach(m => m.classList.remove('show'));
+            }
+        });
+        
+        document.querySelectorAll('.modal-overlay').forEach(m => {
+            m.addEventListener('click', function(e) {
+                if (e.target === this) this.classList.remove('show');
+            });
+        });
+        
+        console.log('🎮 GiftArcade v2.5 — NFT добавлены!');
+        console.log('🛒 Категории: Звёзды, Бонусы, Бейджи, Премиум, Подарки, Кейсы, NFT');
+        console.log('🎁 Ежедневный бонус: 100⭐');
+        console.log('🎨 NFT-подарки: 5 штук');
+    }
+};
+
+// ============================================================
+//  ЗАПУСК
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => App.init());
