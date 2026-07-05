@@ -143,13 +143,18 @@ const App = {
             return false;
         };
         
-        // Для подарков добавляем поле для ввода получателя
+        // Для подарков добавляем поле для ввода получателя и кнопку обновления
         let recipientInput = '';
         if (tab === 'gifts') {
             recipientInput = `
-                <div class="gift-recipient">
-                    <label>👤 Получатель (Telegram ID)</label>
-                    <input type="text" id="giftRecipient" placeholder="Введите Telegram ID получателя" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-size:14px;outline:none;">
+                <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+                    <div class="gift-recipient" style="flex:1;margin-bottom:0;">
+                        <label>👤 Получатель (Telegram ID)</label>
+                        <input type="text" id="giftRecipient" placeholder="Введите Telegram ID получателя">
+                    </div>
+                    <button onclick="App.refreshGifts()" style="padding:8px 14px;border-radius:10px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);cursor:pointer;font-size:13px;margin-top:16px;transition:var(--transition);white-space:nowrap;">
+                        <i data-lucide="refresh-cw" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i>
+                    </button>
                 </div>
             `;
         }
@@ -301,6 +306,15 @@ const App = {
             console.log('ℹ️ Бэкенд не доступен, используем демо-подарки');
             return false;
         }
+    },
+    
+    // ============================================================
+    //  ОБНОВЛЕНИЕ ПОДАРКОВ
+    // ============================================================
+    async refreshGifts() {
+        this.showNotification('🔄', 'Обновление...', 'Загружаем список подарков');
+        await this.fetchTelegramGifts();
+        this.showNotification('✅', 'Готово!', 'Список подарков обновлён');
     },
     
     // ============================================================
