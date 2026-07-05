@@ -173,6 +173,23 @@ def update_balance(user_id):
     conn.close()
     return jsonify({'balance': new_balance})
 
+@app.route('/api/balance/add', methods=['POST'])
+def add_balance():
+    data = request.json
+    user_id = data.get('user_id')
+    amount = data.get('amount', 0)
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        UPDATE users SET balance = balance + %s WHERE user_id = %s
+        RETURNING balance
+    ''', (amount, user_id))
+    new_balance = cursor.fetchone()[0]
+    conn.commit()
+    conn.close()
+    return jsonify({'balance': new_balance})
+
 # ============================================================
 #  API: ИСТОРИЯ ИГР
 # ============================================================
@@ -269,6 +286,27 @@ def add_nft():
     return jsonify({'ok': True})
 
 # ============================================================
+#  API: СТАТИСТИКА
+# ============================================================
+
+@app.route('/api/stats/<int:user_id>', methods=['GET'])
+def get_stats(user_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute('''
+        SELECT 
+            total_games, 
+            wins, 
+            gifts,
+            (SELECT COUNT(*) FROM nft_collection WHERE user_id = %s) as nft_count
+        FROM users 
+        WHERE user_id = %s
+    ''', (user_id, user_id))
+    result = cursor.fetchone()
+    conn.close()
+    return jsonify(result if result else {})
+
+# ============================================================
 #  TELEGRAM WEBHOOK
 # ============================================================
 
@@ -276,6 +314,41 @@ def add_nft():
 def webhook():
     data = request.json
     print(f'📩 Получено обновление: {data}')
+    
+    # Обработка команд от бота
+    if 'message' in data:
+        message = data['message']
+        text = message.get('text', '')
+        user_id = message['from']['id']
+        
+        if text == '/start':
+            # Создаём пользователя в БД
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO users (user_id, username, first_name, last_name)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (user_id) DO NOTHING
+            ''', (user_id, 
+                  message['from'].get('username', ''),
+                  message['from'].get('first_name', ''),
+                  message['from'].get('last_name', '')))
+            conn.commit()
+            conn.close()
+            
+            # Отправляем приветствие
+            url = f'{TELEGRAM_API_URL}/sendMessage'
+            data = {
+                'chat_id': user_id,
+                'text': '🎮 Добро пожаловать в GiftArcade!\n\nОткрой мини-приложение, чтобы начать играть!',
+                'reply_markup': {
+                    'inline_keyboard': [[
+                        {'text': '🚀 Открыть приложение', 'web_app': {'url': 'https://derevcov1307-bot.github.io/giftmarket-demo/'}}
+                    ]]
+                }
+            }
+            requests.post(url, json=data)
+    
     return jsonify({'ok': True})
 
 # ============================================================
@@ -284,11 +357,26 @@ def webhook():
 
 @app.route('/')
 def home():
-    return jsonify({
-        'status': 'GiftArcade bot is running!',
-        'database': 'PostgreSQL connected',
-        'tables': ['users', 'achievements', 'purchases', 'game_history', 'nft_collection']
-    })
+    try:
+        # Проверяем подключение к БД
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM users')
+        user_count = cursor.fetchone()[0]
+        conn.close()
+        
+        return jsonify({
+            'status': 'GiftArcade bot is running!',
+            'database': 'PostgreSQL connected ✅',
+            'users_count': user_count,
+            'tables': ['users', 'achievements', 'purchases', 'game_history', 'nft_collection']
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'GiftArcade bot is running!',
+            'database': f'PostgreSQL error: {str(e)}',
+            'tables': []
+        })
 
 # ============================================================
 #  ЗАПУСК
