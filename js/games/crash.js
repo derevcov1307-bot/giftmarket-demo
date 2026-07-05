@@ -1,5 +1,5 @@
 // ============================================================
-//  ИГРА: CRASH (с улучшенным визуалом)
+//  ИГРА: CRASH (TON)
 // ============================================================
 let crashRunning = false;
 let crashMultiplier = 1;
@@ -11,18 +11,15 @@ function renderCrash() {
     return `
         <div class="game-page-container">
             <div class="game-title">📈 Crash</div>
-            <div class="game-subtitle">Забери выигрыш до падения! (шанс на x2 ~10%)</div>
+            <div class="game-subtitle">Ставка в TON · Забери выигрыш до падения! (шанс на x2 ~10%)</div>
             
             <div class="game-area" id="crashArea">
-                <!-- График -->
                 <div class="crash-chart" id="crashChart">
                     <canvas id="crashCanvas" width="280" height="140"></canvas>
                 </div>
                 
-                <!-- Множитель -->
                 <div style="font-size:48px;font-weight:700;margin:4px 0;transition:color 0.3s;" id="crashMultiplier">1.00x</div>
                 
-                <!-- Прогресс-бар -->
                 <div style="height:4px;background:var(--bg-card);border-radius:4px;max-width:200px;margin:6px auto;overflow:hidden;">
                     <div style="height:100%;width:0%;background:var(--gradient);border-radius:4px;transition:width 0.2s;" id="crashProgress"></div>
                 </div>
@@ -35,11 +32,11 @@ function renderCrash() {
             </div>
             
             <div class="bet-controls">
-                <input type="number" id="crashBet" placeholder="Ставка" value="10" min="1">
+                <input type="number" id="crashBet" placeholder="Ставка" value="0.1" min="0.01" step="0.01">
             </div>
             <div class="quick-bets">
-                ${[5, 10, 25, 50, 100].map(v => 
-                    `<button onclick="document.getElementById('crashBet').value='${v}'">${v}⭐</button>`
+                ${[0.05, 0.1, 0.5, 1, 5].map(v => 
+                    `<button onclick="document.getElementById('crashBet').value='${v}'">${v} TON</button>`
                 ).join('')}
             </div>
             <div class="game-history" id="crashHistory"></div>
@@ -50,21 +47,22 @@ function renderCrash() {
 function startCrash(app) {
     if (crashRunning) return;
     
-    const bet = parseInt(document.getElementById('crashBet').value) || 10;
-    if (bet > app.balance) {
-        app.showNotification('❌', 'Недостаточно звёзд', 'Пополните баланс');
+    const bet = parseFloat(document.getElementById('crashBet').value) || 0.1;
+    
+    if (bet < 0.01) {
+        app.showNotification('⚠️', 'Минимальная ставка', '0.01 TON');
         return;
     }
     
-    if (bet < 1) {
-        app.showNotification('⚠️', 'Минимальная ставка', '1 ⭐');
+    if (bet > app.balance) {
+        app.showNotification('❌', 'Недостаточно TON', 'Пополните баланс');
         return;
     }
     
     crashBet = bet;
     crashHasCashed = false;
     
-    app.balance -= bet;
+    app.balance = Math.round((app.balance - bet) * 100) / 100;
     app.totalGames++;
     app.playedGames.add('crash');
     crashRunning = true;
@@ -87,15 +85,11 @@ function startCrash(app) {
     btn.disabled = false;
     btn.textContent = '💎 Забрать';
     startBtn.disabled = true;
-    btn.style.background = 'var(--gradient)';
-    btn.style.opacity = '1';
     
-    // Очищаем график
     if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
     
-    // Шанс на выигрыш >2x ~10%
     const rand = Math.random();
     let maxMultiplier;
     if (rand < 0.10) {
@@ -109,7 +103,6 @@ function startCrash(app) {
     let current = 1;
     const step = 0.02 + Math.random() * 0.04;
     let history = [1];
-    const startTime = Date.now();
     
     if (crashInterval) clearInterval(crashInterval);
     
@@ -118,11 +111,9 @@ function startCrash(app) {
         crashMultiplier = Math.round(current * 100) / 100;
         display.textContent = crashMultiplier.toFixed(2) + 'x';
         
-        // Прогресс
         const progressPercent = Math.min((crashMultiplier / 10) * 100, 100);
         progress.style.width = progressPercent + '%';
         
-        // Цвет множителя
         if (crashMultiplier > 5) {
             display.style.color = '#ff6b6b';
             progress.style.background = 'linear-gradient(135deg, #ff6b6b, #ff3366)';
@@ -134,14 +125,12 @@ function startCrash(app) {
             progress.style.background = 'var(--gradient)';
         }
         
-        // График
         if (ctx) {
             history.push(crashMultiplier);
             if (history.length > 60) history.shift();
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Сетка
             ctx.strokeStyle = 'rgba(255,255,255,0.05)';
             ctx.lineWidth = 0.5;
             for (let i = 0; i < 5; i++) {
@@ -152,7 +141,6 @@ function startCrash(app) {
                 ctx.stroke();
             }
             
-            // График
             const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
             gradient.addColorStop(0, 'rgba(78,205,196,0.3)');
             gradient.addColorStop(1, 'rgba(78,205,196,0)');
@@ -210,15 +198,16 @@ function crashGame(app, cashed = false) {
     const history = document.getElementById('crashHistory');
     
     if (cashed) {
-        const winAmount = Math.floor(crashBet * crashMultiplier);
-        app.balance += winAmount;
+        const winAmount = Math.round(crashBet * crashMultiplier * 100) / 100;
+        app.balance = Math.round((app.balance + winAmount) * 100) / 100;
         app.wins++;
         display.className = 'result-display win';
         display.style.color = '#4ecdc4';
-        status.textContent = `✅ Забрано! Выигрыш: ${winAmount}⭐ (${crashMultiplier.toFixed(2)}x)`;
+        status.textContent = `✅ Забрано! Выигрыш: ${winAmount.toFixed(2)} TON (${crashMultiplier.toFixed(2)}x)`;
         status.style.color = '#4ecdc4';
-        history.innerHTML += `<span class="win">+${winAmount - crashBet}</span>`;
-        app.showNotification('🎉', `Забрано!`, `${winAmount}⭐ (${crashMultiplier.toFixed(2)}x)`);
+        history.innerHTML += `<span class="win">+${(winAmount - crashBet).toFixed(2)}</span>`;
+        app.showNotification('🎉', `Забрано!`, `${winAmount.toFixed(2)} TON (${crashMultiplier.toFixed(2)}x)`);
+        app.saveGameResult('crash', crashBet, winAmount, crashMultiplier, 'win');
         btn.style.background = '#4ecdc4';
         btn.textContent = '✅ Забрано!';
     } else {
@@ -226,7 +215,8 @@ function crashGame(app, cashed = false) {
         display.style.color = '#ff6b6b';
         status.textContent = `💥 Краш! (${crashMultiplier.toFixed(2)}x)`;
         status.style.color = '#ff6b6b';
-        history.innerHTML += `<span class="lose">-${crashBet}</span>`;
+        history.innerHTML += `<span class="lose">-${crashBet.toFixed(2)}</span>`;
+        app.saveGameResult('crash', crashBet, 0, crashMultiplier, 'lose');
         btn.style.background = '#ff6b6b';
         btn.textContent = '💥 Краш!';
     }
@@ -234,9 +224,7 @@ function crashGame(app, cashed = false) {
     btn.disabled = true;
     btn.style.opacity = '0.6';
     startBtn.disabled = false;
-    
-    updateUI(app);
-    checkAchievements(app);
+    app.updateUI();
     
     if (history.children.length > 20) history.removeChild(history.firstChild);
-}
+} 
