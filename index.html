@@ -180,6 +180,7 @@
                 <div style="font-size:13px;color:var(--text-secondary);">Пополни баланс и купи бонусы</div>
             </div>
 
+            <!-- Вкладки магазина -->
             <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px;">
                 <button class="shop-tab active" data-tab="stars" onclick="App.switchShopTab('stars')">
                     <i data-lucide="star" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i> Звёзды
@@ -198,6 +199,9 @@
                 </button>
                 <button class="shop-tab" data-tab="cases" onclick="App.switchShopTab('cases')">
                     <i data-lucide="package" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i> Кейсы
+                </button>
+                <button class="shop-tab" data-tab="nft" onclick="App.switchShopTab('nft')">
+                    <i data-lucide="diamond" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i> NFT
                 </button>
             </div>
 
@@ -385,6 +389,7 @@
     <script src="js/games/plinko.js"></script>
     <script src="js/games/coinflip.js"></script>
     <script src="js/games/crash.js"></script>
+    <script src="js/games/nft.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
