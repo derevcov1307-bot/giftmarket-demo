@@ -1,5 +1,5 @@
 // ============================================================
-//  ГЛАВНОЕ ПРИЛОЖЕНИЕ (App) — БЕЗ ДЕМО-РЕЖИМА
+//  ГЛАВНОЕ ПРИЛОЖЕНИЕ (App)
 // ============================================================
 const App = {
     // СОСТОЯНИЕ
@@ -64,6 +64,14 @@ const App = {
         premium: [
             { id: 'p1', title: 'Премиум 1 мес', desc: 'x2 бонус ко всем выигрышам', icon: '👑', price: 50, tag: '🔥' },
             { id: 'p2', title: 'Премиум 3 мес', desc: 'x2 бонус + эксклюзивный бейдж', icon: '👑', price: 120, tag: '🔥' }
+        ],
+        gifts: [
+            { id: 'g1', title: '💎 Алмаз', desc: 'Блестящий подарок', icon: '💎', price: 10 },
+            { id: 'g2', title: '🌹 Роза', desc: 'Красивый цветок', icon: '🌹', price: 5 },
+            { id: 'g3', title: '🎂 Торт', desc: 'Сладкий подарок', icon: '🎂', price: 8 },
+            { id: 'g4', title: '🎈 Воздушный шар', desc: 'Праздничный подарок', icon: '🎈', price: 3 },
+            { id: 'g5', title: '⭐ Золотая звезда', desc: 'Особый подарок', icon: '⭐', price: 15 },
+            { id: 'g6', title: '🎁 Подарочная коробка', desc: 'Сюрприз внутри!', icon: '🎁', price: 20 },
         ]
     },
     
@@ -135,7 +143,18 @@ const App = {
             return false;
         };
         
-        grid.innerHTML = items.map(item => `
+        // Для подарков добавляем поле для ввода получателя
+        let recipientInput = '';
+        if (tab === 'gifts') {
+            recipientInput = `
+                <div class="gift-recipient" style="margin-bottom:12px;padding:12px 16px;background:var(--bg-card);border-radius:var(--radius);border:1px solid var(--border-color);">
+                    <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:4px;">👤 Получатель (Telegram ID)</label>
+                    <input type="text" id="giftRecipient" placeholder="Введите Telegram ID" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-size:14px;outline:none;">
+                </div>
+            `;
+        }
+        
+        grid.innerHTML = recipientInput + items.map(item => `
             <div class="shop-item" onclick="App.buyItem('${tab}', '${item.id}')">
                 <div class="shop-icon">${item.icon}</div>
                 <div class="shop-info">
@@ -145,7 +164,7 @@ const App = {
                 </div>
                 ${item.tag ? `<span class="shop-tag hot">${item.tag}</span>` : ''}
                 <button class="shop-btn" ${isOwned(item) ? 'disabled' : ''}>
-                    ${isOwned(item) ? '✅ Куплено' : 'Купить'}
+                    ${isOwned(item) ? '✅ Куплено' : tab === 'gifts' ? '📤 Отправить' : 'Купить'}
                 </button>
             </div>
         `).join('');
@@ -158,6 +177,22 @@ const App = {
     buyItem(category, itemId) {
         const item = this.shopItems[category]?.find(i => i.id === itemId);
         if (!item) return;
+        
+        // Для подарков — запрашиваем получателя
+        if (category === 'gifts') {
+            const recipient = document.getElementById('giftRecipient')?.value.trim();
+            if (!recipient) {
+                this.showNotification('⚠️', 'Укажите получателя', 'Введите Telegram ID пользователя');
+                return;
+            }
+            if (this.balance < item.price) {
+                this.showNotification('❌', 'Недостаточно звёзд', 'Пополните баланс в магазине');
+                return;
+            }
+            // Отправляем подарок
+            this.sendGift(item, recipient);
+            return;
+        }
         
         if (window.Telegram && window.Telegram.WebApp) {
             try {
@@ -182,6 +217,23 @@ const App = {
         if (confirm(`Купить "${item.title}" за ${item.price}⭐? (ДЕМО)`)) {
             this.processPurchase(category, itemId, item);
         }
+    },
+    
+    // Отправка подарка (демо-версия)
+    sendGift(item, recipient) {
+        if (this.balance < item.price) {
+            this.showNotification('❌', 'Недостаточно звёзд', 'Пополните баланс');
+            return;
+        }
+        
+        this.balance -= item.price;
+        this.gifts++;
+        this.showNotification('🎁', `Подарок отправлен!`, `${item.title} → пользователю ${recipient}`);
+        this.updateUI();
+        this.renderShopItems(this.currentShopTab);
+        
+        // В реальном приложении здесь будет вызов Telegram API:
+        // await bot.sendGift(recipient, itemId);
     },
     
     processPurchase(category, itemId, item) {
@@ -305,7 +357,7 @@ const App = {
     crashAction() { crashAction(this); },
     
     // ============================================================
-    //  ИНИЦИАЛИЗАЦИЯ (БЕЗ ДЕМО-РЕЖИМА)
+    //  ИНИЦИАЛИЗАЦИЯ
     // ============================================================
     init() {
         loadTheme(this);
@@ -325,7 +377,7 @@ const App = {
             setTimeout(() => lucide.createIcons(), 200);
         }
         
-        // Онлайн (оставляем)
+        // Онлайн
         setInterval(() => {
             const el = document.getElementById('onlinePlayers');
             const current = parseInt(el.textContent.replace(/,/g, ''));
@@ -355,8 +407,8 @@ const App = {
             });
         });
         
-        console.log('🎮 GiftArcade v2.5 — Демо-режим отключён!');
-        console.log('🛒 Категории: Звёзды, Бонусы, Бейджи, Премиум');
+        console.log('🎮 GiftArcade v2.5 — С подарками!');
+        console.log('🛒 Категории: Звёзды, Бонусы, Бейджи, Премиум, Подарки');
         console.log('🎨 Иконки: Lucide SVG + картинки для игр');
     }
 };
