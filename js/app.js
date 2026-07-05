@@ -1,11 +1,11 @@
 // ============================================================
-//  ГЛАВНОЕ ПРИЛОЖЕНИЕ (App) — TON ЭКОНОМИКА
+//  ГЛАВНОЕ ПРИЛОЖЕНИЕ (App) — TON ПОПОЛНЕНИЕ
 // ============================================================
 const App = {
     // СОСТОЯНИЕ
     user: { name: 'Игрок', status: '🟢 В сети', badge: '🏅' },
     telegramUser: null,
-    balance: 0, // Баланс в TON
+    balance: 0,
     totalGames: 0,
     wins: 0,
     gifts: 0,
@@ -47,7 +47,7 @@ const App = {
         }
     ],
     
-    // ТОВАРЫ МАГАЗИНА (в TON)
+    // ТОВАРЫ МАГАЗИНА
     shopItems: {
         bonus: [
             { id: 'b1', title: 'x2 Бустер', desc: 'Удваивает выигрыш в 5 играх', icon: '⚡', price: 0.5, amount: 1, tag: '🔥' },
@@ -124,6 +124,13 @@ const App = {
                 backdrop: 'Гроза',
                 number: '#0007'
             }
+        ],
+        deposit: [
+            { id: 'd1', title: '1 TON', desc: 'Пополни баланс на 1 TON', icon: '💎', price: 1, amount: 1 },
+            { id: 'd2', title: '5 TON', desc: 'Пополни баланс на 5 TON (бонус 5%)', icon: '💎', price: 5, amount: 5.25, tag: '🔥' },
+            { id: 'd3', title: '10 TON', desc: 'Пополни баланс на 10 TON (бонус 10%)', icon: '💎', price: 10, amount: 11, tag: '🔥' },
+            { id: 'd4', title: '25 TON', desc: 'Пополни баланс на 25 TON (бонус 15%)', icon: '💎', price: 25, amount: 28.75, tag: '🔥' },
+            { id: 'd5', title: '50 TON', desc: 'Пополни баланс на 50 TON (бонус 20%)', icon: '💎', price: 50, amount: 60, tag: '🔥' }
         ]
     },
     
@@ -282,6 +289,86 @@ const App = {
     },
     
     // ============================================================
+    //  TON ПОПОЛНЕНИЕ
+    // ============================================================
+    async connectWallet() {
+        try {
+            if (this.walletConnected) {
+                this.showNotification('ℹ️', 'Кошелёк уже подключён', this.walletAddress);
+                return;
+            }
+            
+            const connector = new TonConnect();
+            const wallet = await connector.connect({
+                manifestUrl: 'https://derevcov1307-bot.github.io/giftmarket-demo/tonconnect-manifest.json'
+            });
+            
+            this.walletAddress = wallet.account.address;
+            this.walletConnected = true;
+            
+            document.getElementById('walletStatus').textContent = '✅ Подключён';
+            document.getElementById('walletAddress').textContent = this.walletAddress.slice(0, 6) + '...' + this.walletAddress.slice(-4);
+            
+            this.showNotification('✅', 'Кошелёк подключён!', this.walletAddress.slice(0, 6) + '...' + this.walletAddress.slice(-4));
+            playSound('bonus');
+            
+            localStorage.setItem('walletAddress', this.walletAddress);
+            localStorage.setItem('walletConnected', 'true');
+            
+            this.renderShopItems(this.currentShopTab);
+            
+        } catch (error) {
+            console.error('Ошибка подключения кошелька:', error);
+            this.showNotification('❌', 'Ошибка подключения', 'Попробуйте позже');
+        }
+    },
+    
+    async depositTON(item) {
+        if (!this.walletConnected) {
+            this.showNotification('⚠️', 'Подключите кошелёк', 'Сначала подключите TON кошелёк в настройках');
+            return;
+        }
+        
+        this.showNotification('💎', 'Оплата TON', `Отправьте ${item.price} TON на адрес:`);
+        this.showNotification('📋', 'Адрес', this.walletAddress);
+        this.showNotification('⏳', 'Ожидание...', 'После оплаты баланс пополнится автоматически');
+        
+        setTimeout(async () => {
+            try {
+                const response = await fetch(`${this.apiBase}/api/balance/add`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: this.user_id,
+                        amount: Math.round(item.amount * 100)
+                    })
+                });
+                const data = await response.json();
+                this.balance = data.balance / 100;
+                this.showNotification('🎉', 'Пополнение успешно!', `+${item.amount} TON`);
+                playSound('bonus');
+                this.updateUI();
+                this.renderShopItems(this.currentShopTab);
+            } catch (error) {
+                this.showNotification('❌', 'Ошибка', 'Не удалось пополнить баланс');
+            }
+        }, 3000);
+    },
+    
+    loadWallet() {
+        const address = localStorage.getItem('walletAddress');
+        const connected = localStorage.getItem('walletConnected') === 'true';
+        
+        if (address && connected) {
+            this.walletAddress = address;
+            this.walletConnected = true;
+            
+            document.getElementById('walletStatus').textContent = '✅ Подключён';
+            document.getElementById('walletAddress').textContent = address.slice(0, 6) + '...' + address.slice(-4);
+        }
+    },
+    
+    // ============================================================
     //  ОБНОВЛЕНИЕ UI
     // ============================================================
     updateUI() {
@@ -354,20 +441,31 @@ const App = {
         
         const items = this.shopItems[tab] || [];
         
-        grid.innerHTML = items.map(item => `
-            <div class="shop-item" onclick="App.buyItem('${tab}', '${item.id}')">
-                <div class="shop-icon">${item.icon}</div>
-                <div class="shop-info">
-                    <div class="shop-title">${item.title}</div>
-                    <div class="shop-desc">${item.desc}</div>
-                    <div class="shop-price">${item.price.toFixed(2)} TON</div>
+        grid.innerHTML = items.map(item => {
+            let iconHtml = '';
+            if (tab === 'deposit') {
+                iconHtml = `<div class="shop-icon">💎</div>`;
+            } else {
+                iconHtml = `<div class="shop-icon">${item.icon}</div>`;
+            }
+            
+            const isDeposit = tab === 'deposit';
+            
+            return `
+                <div class="shop-item" onclick="${isDeposit ? '' : `App.buyItem('${tab}', '${item.id}')`}">
+                    ${iconHtml}
+                    <div class="shop-info">
+                        <div class="shop-title">${item.title}</div>
+                        <div class="shop-desc">${item.desc}</div>
+                        <div class="shop-price">${item.price.toFixed(2)} TON</div>
+                    </div>
+                    ${item.tag ? `<span class="shop-tag hot">${item.tag}</span>` : ''}
+                    <button class="shop-btn" ${isDeposit && !App.walletConnected ? 'disabled' : ''} onclick="${isDeposit ? `App.depositTON(item)` : ''}">
+                        ${isDeposit ? (!App.walletConnected ? '🔒 Подключите кошелёк' : '💳 Пополнить') : 'Купить'}
+                    </button>
                 </div>
-                ${item.tag ? `<span class="shop-tag hot">${item.tag}</span>` : ''}
-                <button class="shop-btn">
-                    Купить
-                </button>
-            </div>
-        `).join('');
+            `;
+        }).join('');
         
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
@@ -510,6 +608,7 @@ const App = {
     init() {
         loadTheme(this);
         loadBg(this);
+        this.loadWallet();
         this.renderGames();
         renderAchievements(this);
         this.renderShopItems('bonus');
@@ -525,14 +624,12 @@ const App = {
             setTimeout(() => lucide.createIcons(), 200);
         }
         
-        // Онлайн
         setInterval(() => {
             const el = document.getElementById('onlinePlayers');
             const current = parseInt(el.textContent.replace(/,/g, ''));
             el.textContent = Math.max(100, current + Math.floor(Math.random() * 20) - 5).toLocaleString();
         }, 4000);
         
-        // Навигация
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', function() {
                 const page = this.dataset.page;
@@ -543,7 +640,6 @@ const App = {
             });
         });
         
-        // Закрытие модалок
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
                 document.querySelectorAll('.modal-overlay.show').forEach(m => m.classList.remove('show'));
@@ -556,13 +652,10 @@ const App = {
             });
         });
         
-        console.log('🎮 GiftArcade v3.0 — TON Экономика!');
+        console.log('🎮 GiftArcade v3.1 — TON Пополнение!');
         console.log('💎 Валюта: TON');
-        console.log('💳 Баланс сохраняется в PostgreSQL');
+        console.log('💳 Пополнение через TON Connect');
     }
 };
 
-// ============================================================
-//  ЗАПУСК
-// ============================================================
 document.addEventListener('DOMContentLoaded', () => App.init());
