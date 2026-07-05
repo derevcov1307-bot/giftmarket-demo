@@ -1,12 +1,14 @@
 import os
 import json
+import uuid
+import time
+from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
 from dotenv import load_dotenv
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from datetime import datetime
 
 load_dotenv()
 
@@ -26,6 +28,9 @@ def get_db_connection():
     conn = psycopg2.connect(DATABASE_URL)
     return conn
 
+# Временное хранилище инвойсов (в реальном проекте — БД)
+invoices = {}
+
 # ============================================================
 #  СОЗДАНИЕ ТАБЛИЦ
 # ============================================================
@@ -42,7 +47,7 @@ def init_db():
             username TEXT,
             first_name TEXT,
             last_name TEXT,
-            balance INTEGER DEFAULT 1000,
+            balance INTEGER DEFAULT 0,
             total_games INTEGER DEFAULT 0,
             wins INTEGER DEFAULT 0,
             gifts INTEGER DEFAULT 0,
@@ -107,6 +112,21 @@ def init_db():
         )
     ''')
     
+    # Таблица инвойсов (для TON пополнений)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS invoices (
+            id SERIAL PRIMARY KEY,
+            invoice_id TEXT UNIQUE,
+            user_id BIGINT,
+            amount INTEGER,
+            wallet_address TEXT,
+            paid BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            paid_at TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (user_id)
+        )
+    ''')
+    
     conn.commit()
     conn.close()
     print('✅ Таблицы созданы/проверены')
@@ -140,7 +160,7 @@ def create_or_update_user(user_id):
             username = EXCLUDED.username,
             first_name = EXCLUDED.first_name,
             last_name = EXCLUDED.last_name
-    ''', (user_id, data.get('username'), data.get('first_name'), data.get('last_name'), 1000))
+    ''', (user_id, data.get('username'), data.get('first_name'), data.get('last_name'), 0))
     
     conn.commit()
     conn.close()
@@ -286,6 +306,23 @@ def add_nft():
     return jsonify({'ok': True})
 
 # ============================================================
+#  API: ПОКУПКИ
+# ============================================================
+
+@app.route('/api/purchase', methods=['POST'])
+def add_purchase():
+    data = request.json
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO purchases (user_id, item_id, category, price)
+        VALUES (%s, %s, %s, %s)
+    ''', (data['user_id'], data['item_id'], data['category'], data['price']))
+    conn.commit()
+    conn.close()
+    return jsonify({'ok': True})
+
+# ============================================================
 #  API: СТАТИСТИКА
 # ============================================================
 
@@ -307,6 +344,84 @@ def get_stats(user_id):
     return jsonify(result if result else {})
 
 # ============================================================
+#  API: TON ПОПОЛНЕНИЕ
+# ============================================================
+
+@app.route('/api/create_invoice', methods=['POST'])
+def create_invoice():
+    """Создаёт счёт для оплаты в TON"""
+    data = request.json
+    user_id = data.get('user_id')
+    amount = data.get('amount')
+    wallet_address = data.get('wallet_address')
+    
+    if not user_id or not amount or not wallet_address:
+        return jsonify({'ok': False, 'error': 'Не все параметры указаны'}), 400
+    
+    invoice_id = str(uuid.uuid4())
+    
+    # Сохраняем в БД
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO invoices (invoice_id, user_id, amount, wallet_address)
+        VALUES (%s, %s, %s, %s)
+    ''', (invoice_id, user_id, int(amount * 100), wallet_address))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({
+        'ok': True,
+        'invoice_id': invoice_id,
+        'address': 'EQD...' + str(uuid.uuid4())[:8],
+        'amount': amount
+    })
+
+@app.route('/api/check_invoice/<invoice_id>', methods=['GET'])
+def check_invoice(invoice_id):
+    """Проверяет статус инвойса"""
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute('SELECT * FROM invoices WHERE invoice_id = %s', (invoice_id,))
+    invoice = cursor.fetchone()
+    conn.close()
+    
+    if not invoice:
+        return jsonify({'ok': False, 'error': 'Инвойс не найден'}), 404
+    
+    # Имитация оплаты через 10 секунд (в реальном проекте — проверка блокчейна)
+    if not invoice['paid']:
+        created_at = invoice['created_at']
+        if (datetime.now() - created_at).total_seconds() > 10:
+            # Помечаем как оплаченный
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                UPDATE invoices SET paid = TRUE, paid_at = CURRENT_TIMESTAMP
+                WHERE invoice_id = %s
+            ''', (invoice_id,))
+            conn.commit()
+            
+            # Начисляем баланс
+            cursor.execute('''
+                UPDATE users SET balance = balance + %s WHERE user_id = %s
+                RETURNING balance
+            ''', (invoice['amount'], invoice['user_id']))
+            new_balance = cursor.fetchone()[0]
+            conn.commit()
+            conn.close()
+            
+            invoice['paid'] = True
+            invoice['balance'] = new_balance
+    
+    return jsonify({
+        'ok': True,
+        'paid': invoice['paid'],
+        'balance': invoice.get('balance', 0),
+        'amount': invoice['amount'] / 100
+    })
+
+# ============================================================
 #  TELEGRAM WEBHOOK
 # ============================================================
 
@@ -315,32 +430,30 @@ def webhook():
     data = request.json
     print(f'📩 Получено обновление: {data}')
     
-    # Обработка команд от бота
     if 'message' in data:
         message = data['message']
         text = message.get('text', '')
         user_id = message['from']['id']
         
         if text == '/start':
-            # Создаём пользователя в БД
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO users (user_id, username, first_name, last_name)
-                VALUES (%s, %s, %s, %s)
+                INSERT INTO users (user_id, username, first_name, last_name, balance)
+                VALUES (%s, %s, %s, %s, %s)
                 ON CONFLICT (user_id) DO NOTHING
             ''', (user_id, 
                   message['from'].get('username', ''),
                   message['from'].get('first_name', ''),
-                  message['from'].get('last_name', '')))
+                  message['from'].get('last_name', ''),
+                  0))
             conn.commit()
             conn.close()
             
-            # Отправляем приветствие
             url = f'{TELEGRAM_API_URL}/sendMessage'
             data = {
                 'chat_id': user_id,
-                'text': '🎮 Добро пожаловать в GiftArcade!\n\nОткрой мини-приложение, чтобы начать играть!',
+                'text': '🎮 Добро пожаловать в GiftArcade!\n\n💰 Баланс: 0 TON\n\nОткрой мини-приложение, чтобы начать играть и пополнять баланс!',
                 'reply_markup': {
                     'inline_keyboard': [[
                         {'text': '🚀 Открыть приложение', 'web_app': {'url': 'https://derevcov1307-bot.github.io/giftmarket-demo/'}}
@@ -358,7 +471,6 @@ def webhook():
 @app.route('/')
 def home():
     try:
-        # Проверяем подключение к БД
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute('SELECT COUNT(*) FROM users')
@@ -369,7 +481,7 @@ def home():
             'status': 'GiftArcade bot is running!',
             'database': 'PostgreSQL connected ✅',
             'users_count': user_count,
-            'tables': ['users', 'achievements', 'purchases', 'game_history', 'nft_collection']
+            'tables': ['users', 'achievements', 'purchases', 'game_history', 'nft_collection', 'invoices']
         })
     except Exception as e:
         return jsonify({
@@ -386,4 +498,5 @@ if __name__ == '__main__':
     init_db()
     print('🤖 GiftArcade Bot is running!')
     print('🗄️ PostgreSQL connected!')
+    print('💳 TON payments ready!')
     app.run(host='0.0.0.0', port=5000)
