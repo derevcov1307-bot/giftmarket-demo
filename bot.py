@@ -24,7 +24,6 @@ BOT_TOKEN = os.getenv('BOT_TOKEN')
 TELEGRAM_API_URL = f'https://api.telegram.org/bot{BOT_TOKEN}'
 
 def get_db_connection():
-    """Подключение к PostgreSQL"""
     conn = psycopg2.connect(DATABASE_URL)
     return conn
 
@@ -33,11 +32,9 @@ def get_db_connection():
 # ============================================================
 
 def init_db():
-    """Создаёт таблицы, если их нет"""
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Таблица пользователей
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             user_id BIGINT PRIMARY KEY,
@@ -55,7 +52,6 @@ def init_db():
         )
     ''')
     
-    # Таблица достижений
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS achievements (
             id SERIAL PRIMARY KEY,
@@ -66,7 +62,6 @@ def init_db():
         )
     ''')
     
-    # Таблица покупок
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS purchases (
             id SERIAL PRIMARY KEY,
@@ -79,7 +74,6 @@ def init_db():
         )
     ''')
     
-    # Таблица истории игр
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS game_history (
             id SERIAL PRIMARY KEY,
@@ -94,7 +88,6 @@ def init_db():
         )
     ''')
     
-    # Таблица NFT коллекции
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS nft_collection (
             id SERIAL PRIMARY KEY,
@@ -109,7 +102,6 @@ def init_db():
         )
     ''')
     
-    # Таблица инвойсов (для TON пополнений)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS invoices (
             id SERIAL PRIMARY KEY,
@@ -167,7 +159,7 @@ def create_or_update_user(user_id):
 #  API: БАЛАНС
 # ============================================================
 
-@app.route('/api/balance/<int:user_id>', methods=['GET'])
+@app.route('/api/balance/<int:user_id>', methods(['GET'])
 def get_balance(user_id):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -346,7 +338,6 @@ def get_stats(user_id):
 
 @app.route('/api/create_invoice', methods=['POST'])
 def create_invoice():
-    """Создаёт счёт для оплаты в TON"""
     data = request.json
     user_id = data.get('user_id')
     amount = data.get('amount')
@@ -357,7 +348,6 @@ def create_invoice():
     
     invoice_id = str(uuid.uuid4())
     
-    # Сохраняем в БД
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('''
@@ -376,7 +366,6 @@ def create_invoice():
 
 @app.route('/api/check_invoice/<invoice_id>', methods=['GET'])
 def check_invoice(invoice_id):
-    """Проверяет статус инвойса"""
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute('SELECT * FROM invoices WHERE invoice_id = %s', (invoice_id,))
